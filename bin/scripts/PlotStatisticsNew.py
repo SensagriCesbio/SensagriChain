@@ -7,7 +7,8 @@
 ###################################################################################################
 
 import sys
-sys.path.insert(0, '/users/p18004/larnaud/SenSAgriChain/bin/scripts/tolatex/')
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'tolatex'))
 from collections import defaultdict
 from scipy.stats import t as tdist
 from numpy import loadtxt
@@ -23,7 +24,6 @@ import math
 import tolatex as latex
 import ComputeBinaryStatistics as BinStat
 import BinaryStatistics as ClassBinStat
-import os
 
 
 from osgeo import ogr, osr
