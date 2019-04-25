@@ -1,0 +1,20 @@
+# Ignore everything
+/*
+
+# But not these files...
+!.gitignore
+!README.md
+!*/bin/scripts/sensagrichain
+!*/bin/scripts/SplitPolygonsArea.py
+!*/bin/scripts/SamplingSelection.py
+!*/bin/scripts/GenerateCommonDates.py
+!*/bin/scripts/dates.py
+!*/bin/scripts/PlotStatisticsNew.py
+!*/bin/scripts/infolog.py
+!*/bin/scripts/ComputeBinaryStatistics.py
+!*/bin/scripts/BinaryStatistics.py
+!*/bin/scripts/GetShpFileInfo.py
+!*/bin/scripts/config/template-joborder.cfg
+!*/bin/scripts/config/template-results.cfg
+!*/bin/scripts/tolatex/template.tex
+!*/bin/scripts/tolatex/tolatex.py
