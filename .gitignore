@@ -24,3 +24,4 @@
 !/bin/scripts/config/template-results.cfg
 !/bin/scripts/tolatex/template.tex
 !/bin/scripts/tolatex/tolatex.py
+!/bin/scripts/tolatex/__init__.py
