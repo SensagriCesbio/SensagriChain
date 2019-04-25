@@ -7,7 +7,6 @@
 ######################################
 import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'tolatex'))
 import subprocess
 import string
 import ConfigParser
@@ -19,7 +18,7 @@ import PlotStatisticsNew as psn
 import matplotlib.pyplot as plt
 import matplotlib.backends.backend_pdf as mpdf
 from dates import GetDates,GetDatesSentinel
-import tolatex as latex
+import tolatex.tolatex as latex
 from time import gmtime, strftime
 
 def cartouche():

@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 import matplotlib.backends.backend_pdf
 import csv
 import math
-import tolatex as latex
+import tolatex.tolatex as latex
 import ComputeBinaryStatistics as BinStat
 import BinaryStatistics as ClassBinStat
 
