@@ -1,10 +1,10 @@
 # Ignore everything
-/*
+*
 
 # But not these files...
 !.gitignore
 !README.md
-!*/bin/scripts/sensagrichain
+!/bin/scripts/sensagrichain
 !*/bin/scripts/SplitPolygonsArea.py
 !*/bin/scripts/SamplingSelection.py
 !*/bin/scripts/GenerateCommonDates.py
