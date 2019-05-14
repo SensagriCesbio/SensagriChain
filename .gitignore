@@ -28,6 +28,7 @@
 # Main cpp programs
 
 !bin/cpp
+!bin/cpp/build
 !bin/cpp/MainPrograms
 !bin/cpp/MainPrograms/RFClassificationVI.cxx
 !bin/cpp/MainPrograms/RemoveNul.cxx
