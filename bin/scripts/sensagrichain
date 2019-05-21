@@ -212,7 +212,6 @@ def ExportResults(fileconf):
     for section in SectionsList:
       # TODO: Ajouter comme param
       croptype = 0 #TODO  
-      RFDir = "Classifications"
       imperfectCM = False
       TypeName=["","-CROP","CTAfterCM"]
       png = 0
@@ -222,6 +221,7 @@ def ExportResults(fileconf):
       # Load config parameters
       workdir = config.get(section,"WorkDirectory")
       datadir = config.get(section,"WorkDirectory")+"/AllTiles/"+config.get(section,"DataDirectory")+"/"
+      RFDir = config.get(section,"ClassifDirectory")
       band = config.get(section,"Label")
       name = config.get(section,"Name")
       DatesFile = workdir + "/WorkFiles/" + config.get(section,"DatesFile")
@@ -546,7 +546,7 @@ printdebug () {
 }
 # Load MPI module #
 module purge
-module load intel/18.2 intelmpi/18.2 chdb/1.0
+module load intel/18.2 intelmpi/18.2 chdb/1.0 sensagri
 
 
 #dirname=/tmpdir/$$USER/$$SLURM_JOBID
@@ -822,8 +822,21 @@ otbcli_ClassificationMapRegularization -io.in $path/tmp/${tile}_${step}${case}${
 CreateProducts = string.Template("""
 # ${step} ${method} ${tile} RadDate=${date1} OptDate=${date2} #
 printlog "${step} ${method} ${tile} RadDate=${date1} OptDate=${date2}"
-$$SENSAGRICHAIN_HOME/bin/cpp/Executables/FusionProducts $path/tmp/${tile}_${step1}_probabilities_${tag1}.tif $path/tmp/${tile}_${step2}${method}_probabilities_${tag2}.tif ${classdir}Classes.txt ${classdir}Binary.txt $path/Products/${tile}${method}_Products_${tag1}_${tag2}.tif
+${srunstart}$$SENSAGRICHAIN_HOME/bin/cpp/Executables/FusionProducts $path/tmp/${tile}_${step1}_probabilities_${tag1}.tif $path/tmp/${tile}_${step2}${method}_probabilities_${tag2}.tif ${classdir}Classes.txt ${classdir}Binary.txt $path/tmp/${tile}${method}_ProductsRaw_${tag1}_${tag2}.tif ${srunend}
 """)
+
+ApplyZeros = string.Template("""
+# Apply zeros per tile product ${step} ${method} ${tile} RadDate=${date1} OptDate=${date2} #
+printlog "Apply zero per tile product ${step} ${method} ${tile} RadDate=${date1} OptDate=${date2}"
+${srunstart}otbcli_BandMathX -il $image $path/tmp/${tile}${method}_ProductsRaw_${tag1}_${tag2}.tif -out $path/Products/${tile}${method}_Products_${tag1}_${tag2}.tif -exp 'im1b1 == 0 || im1b10 == 0 ? 0*im2 : im2' ${srunend}
+""")
+
+CreateMosaic = string.Template("""
+# Create Mosaic ${step} ${method} RadDate=${date1} OptDate=${date2} #
+printlog "Create Mosaic ${step} ${method} RadDate=${date1} OptDate=${date2}"
+${srunstart}gdalwarp -srcnodata 0 -dstnodata 0 $ProductsList $srunend
+""")
+
 
 CreateCropMask = string.Template("""
 # ${step} ${method} ${tile} RadDate=${date1} OptDate=${date2} #
@@ -1485,6 +1498,17 @@ if __name__ == "__main__":
     }
  
     ###### MAPS ################
+
+    # TO DO automatize sru choice
+    Qsrun = True
+
+    if Qsrun:
+	    srunstart= "srun --hint=nomultithread -N1 -n1 -c2 --exclusive "
+            srunend = "&"
+    else:
+	    srunstart= ""
+            srunend = ""
+
     OptMap = {}
     RadMap = {}
     FusMap = {}
@@ -1534,11 +1558,14 @@ if __name__ == "__main__":
         }
 
         FusPro[tile] = {
+        'srunstart':srunstart, 
+        'srunend':srunend, 
         'ntasks':NbRun+1,
         'step':"Create Fusion Products",
         'step1':"Radar",
         'step2':"Optical",
         'method':"_" +  QOption["Fusion"]["OpticalType"], 
+        'image':workdir + "/WorkFiles/Images/" + OpticalImages[tile],
         'path': workdir,
         'tile':tile,
         'date1':0,
@@ -1548,7 +1575,6 @@ if __name__ == "__main__":
         'classdir':workdir+"/WorkFiles/"
         }
  
-
         CMPro[tile] = {
         'ntasks':NbRun+1,
         'step':"Create Crop Mask",
@@ -1599,6 +1625,21 @@ if __name__ == "__main__":
         'classdir':workdir+"/WorkFiles/",
         'reg':""
         }
+
+    MosPro = {
+    'srunstart':srunstart, 
+    'srunend':srunend, 
+    'ntasks':NbRun+1,
+    'step':"Create Mosaic Products",
+    'method':"_" +  QOption["Fusion"]["OpticalType"], 
+    'path': workdir,
+    'ProductList':"",
+    'date1':0,
+    'date2':0,
+    'tag1':0,
+    'tag2':0,
+    'classdir':workdir+"/WorkFiles/"
+    }
     
     # Python Part
     
@@ -1870,6 +1911,30 @@ if __name__ == "__main__":
     	        FusPro[tile]['tag1'] = tag1
                 FusPro[tile]['tag2'] = tag2
                 scriptfile.write(CreateProducts.substitute(FusPro[tile]))
+	    if(Qsrun): scriptfile.write("wait\n")
+
+        if(QOption["Fusion"]["CreateProducts"]):
+            for tile in TilesList:
+                FusPro[tile]['date1'] = date1
+                FusPro[tile]['date2'] = date2
+    	        FusPro[tile]['tag1'] = tag1
+                FusPro[tile]['tag2'] = tag2
+                scriptfile.write(ApplyZeros.substitute(FusPro[tile]))
+	    if(Qsrun): scriptfile.write("wait\n")
+            MosPro["ProductsList"] = ""
+            for tile in TilesList:
+		    MosPro["ProductsList"] = MosPro["ProductsList"] + "%s/Products/%s%s_Products_%s_%s.tif "%(workdir,tile,FusPro[tile]["method"],tag1,tag2)
+            MosPro["ProductsList"] = MosPro["ProductsList"] + "%s/Products/%s%s_Products_%s_%s.tif"%(workdir,name,FusPro[tile]["method"],tag1,tag2)
+
+
+            scriptfile.write(CreateMosaic.substitute(MosPro))
+    if(Qsrun): scriptfile.write("wait\n")
+
+    for k in range(len(ProdRadDatesList)):
+        date1 = ProdRadDatesList[k]    
+        date2 = ProdOptDatesList[k]    
+	tag1 = int(S1DatesTag[date1-1])
+	tag2 = int(S2DatesTag[date2-1])
 
         if(QOption["Fusion"]["Regularization"]):
             for tile in TilesList:
@@ -1877,6 +1942,10 @@ if __name__ == "__main__":
                 ProReg[tile]['tag2'] = tag2
                 ProReg[tile]['product'] = "Products"
                 scriptfile.write(RegularizeProducts.substitute(ProReg[tile]))
+
+
+         
+
 
     if(QOption["Fusion"]["CreateProducts"] or QOption["Fusion"]["Regularization"]):
         scriptfile.write("\n# Compress Products.\n") 
