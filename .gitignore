@@ -42,6 +42,8 @@
 !bin/cpp/MainPrograms/CropFilter.cxx
 !bin/cpp/MainPrograms/Sampling.cxx
 !bin/cpp/MainPrograms/CreateOpticalPrimitives.cxx
+!bin/cpp/includes
 !bin/cpp/includes/ExtractSampleFromVectorFile.hpp
 !bin/cpp/includes/ReadWriteSamples.hpp
 !bin/cpp/includes/WriteConfusionMatrix.hpp
+
