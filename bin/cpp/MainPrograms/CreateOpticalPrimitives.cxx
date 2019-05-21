@@ -1,8 +1,8 @@
 //***********************************************//
 //             Create Optical Primitive          //
 //             in streaming                      //
-//             Update 22/0é20169                 //
-//             Ludo 14/03/2018                   //
+//             Update 21/05/2019                 //
+//             Ludo   14/03/2018                 //
 //***********************************************//
 #include <iostream>
 #include <stdexcept>
@@ -40,7 +40,7 @@ int main(int argc, char * argv[])
       std::cerr << "ProfilesIn.txt\tFile that contains the optical bands for all dates." << std::endl;
       std::cerr << "ProfilesOut.txt\tOutput file with the primitives added." << std::endl;
       std::cerr << "NbDates\t\tNumber of optical dates." << std::endl;
-      std::cerr << "type\t\tType of primitives calculated (0: OSO, 1: Red Edge, 2: OSO and Red Edge)" << std::endl;
+      std::cerr << "type\t\tType of primitives calculated (0: OSO, 1: Red Edge, 2: OSO and Red Edge, 3: OSO old and Red Edge)" << std::endl;
       return EXIT_FAILURE;
     }
 
@@ -72,7 +72,8 @@ int main(int argc, char * argv[])
     if(type == 0) NbPrimitives = 13;
     if(type == 1) NbPrimitives = 12;
     if(type == 2) NbPrimitives = 15;
-    if(type == 3)
+    if(type == 3) NbPrimitives = 15;
+    if(type == 4)
     {
       std::cout << "PCA with "<< matrixFile << std::endl;
       std::cout << "         "<< moyFile << std::endl;
@@ -229,8 +230,6 @@ SampleType CreatePrimitive(SampleType Profile, int NbDates, int NbPrimitives, in
         else newProfile[j] = (A-B)/0.00000001;
         j++;
        
-        //A = static_cast<float>(Profile[i - 11 + 3]); //B3
-        //B = static_cast<float>(Profile[i - 11 + 8]); //B8
         A = static_cast<float>(Profile[i - 11 + 9]); //B8A
         B = static_cast<float>(Profile[i - 11 + 11]); //B11
 
@@ -259,6 +258,51 @@ SampleType CreatePrimitive(SampleType Profile, int NbDates, int NbPrimitives, in
     } 
   }
   if(type==3)
+  {
+    // OSO + RE case //
+    int NbBands = 15;
+    newProfile.SetSize(NbDates*NbPrimitives);
+    int j = 0;  
+    for (int i = 0; i < NbDates*10; i++)
+    {   
+      newProfile[j] = static_cast<float>(Profile[i]);
+      j++;
+      if( (i+1)%10 == 0)
+      {
+        A = static_cast<float>(Profile[i - 11 + 8]); //B8
+        B = static_cast<float>(Profile[i - 11 + 4]); //B4
+        if ( (A+B) != 0) newProfile[j] = (A-B)/(A+B); //NDVI
+        else newProfile[j] = (A-B)/0.00000001;
+        j++;
+       
+        A = static_cast<float>(Profile[i - 11 + 3]); //B3
+        B = static_cast<float>(Profile[i - 11 + 8]); //B8
+
+        if ( (A+B) != 0) newProfile[j] = (A-B)/(A+B); //NDWI Green
+        else newProfile[j] = (A-B)/0.00000001;
+        j++; 
+      
+        A = 0.0;
+        for (int k = 0; k<10; k++) A = A + (static_cast<float>(Profile[i - k])*static_cast<float>(Profile[i - k]));
+        newProfile[j] = std::sqrt(A);                 //Brightness
+        j++; 
+
+        A = static_cast<float>(Profile[i - 11 + 8]); //B8
+        B = static_cast<float>(Profile[i - 11 + 4]); //B4
+        C = static_cast<float>(Profile[i - 11 + 3]); //B3
+        if ( B != 0) newProfile[j] = (B-C)/A; //PSRI_NIR
+        else newProfile[j] = (B-C)/0.00000001;
+        j++;
+       
+        A = static_cast<float>(Profile[i - 11 + 5]); //B5 
+        B = static_cast<float>(Profile[i - 11 + 8]); //B8
+        if ( B != 0) newProfile[j] = A/B; //CHL_RE
+        else newProfile[j] = A/0.00000001;
+        j++; 
+      }
+    } 
+  }
+  if(type==4)
   {
     // CAUTION: Experimental using fixed pca bases   
     newProfile.SetSize(NbDates*NbPrimitives);
