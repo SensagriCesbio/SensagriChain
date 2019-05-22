@@ -40,7 +40,7 @@ int main(int argc, char * argv[])
       std::cerr << "ProfilesIn.txt\tFile that contains the optical bands for all dates." << std::endl;
       std::cerr << "ProfilesOut.txt\tOutput file with the primitives added." << std::endl;
       std::cerr << "NbDates\t\tNumber of optical dates." << std::endl;
-      std::cerr << "type\t\tType of primitives calculated (0: OSO, 1: Red Edge, 2: OSO and Red Edge, 3: OSO old and Red Edge)" << std::endl;
+      std::cerr << "type\t\tType of primitives calculated (0: OSO, 1: Red Edge, 2: OSO and Red Edge, 3: OSO and Red Edge Old Version)" << std::endl;
       return EXIT_FAILURE;
     }
 
@@ -289,8 +289,8 @@ SampleType CreatePrimitive(SampleType Profile, int NbDates, int NbPrimitives, in
 
         A = static_cast<float>(Profile[i - 11 + 8]); //B8
         B = static_cast<float>(Profile[i - 11 + 4]); //B4
-        C = static_cast<float>(Profile[i - 11 + 3]); //B3
-        if ( B != 0) newProfile[j] = (B-C)/A; //PSRI_NIR
+        C = static_cast<float>(Profile[i - 11 + 2]); //B2
+        if ( B != 0) newProfile[j] = (B-C)/A; //PSRI_NIR B2 instead of B3
         else newProfile[j] = (B-C)/0.00000001;
         j++;
        
