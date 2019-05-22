@@ -13,7 +13,6 @@ export PATH=${SENSAGRICHAIN_HOME}/bin/scripts:$PATH
 export LD_LIBRARY_PATH=${SSOTB_HOME}/lib:$LD_LIBRARY_PATH
 export ITK_AUTOLOAD_PATH=${SSOTB_HOME}/otb/applications/
  
-#export LD_LIBRARY_PATH=${OTB_HOME}/lib
 PATH=$PATH:~/SenSAgriChain/bin/scripts
 PATH=$PATH:~/SenSAgriChain/bin/OTB/Executables
 
