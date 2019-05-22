@@ -11,9 +11,9 @@ export PATH=${SENSAGRICHAIN_HOME}/bin/chdb-master:$PATH
 export PATH=${SENSAGRICHAIN_HOME}/bin/cpp/Executables:$PATH
 export PATH=${SENSAGRICHAIN_HOME}/bin/scripts:$PATH
 export LD_LIBRARY_PATH=${SSOTB_HOME}/lib:$LD_LIBRARY_PATH
-#export ITK_AUTOLOAD_PATH=/users/p18004/larnaud/OTB-6.2.0-Linux64/lib/otb/applications/
+export ITK_AUTOLOAD_PATH=${SSOTB_HOME}/otb/applications/
  
-export LD_LIBRARY_PATH=${OTB_HOME}/lib
+#export LD_LIBRARY_PATH=${OTB_HOME}/lib
 PATH=$PATH:~/SenSAgriChain/bin/scripts
 PATH=$PATH:~/SenSAgriChain/bin/OTB/Executables
 
