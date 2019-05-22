@@ -52,4 +52,5 @@
 !bin/cpp/includes/ExtractSampleFromVectorFile.hpp
 !bin/cpp/includes/ReadWriteSamples.hpp
 !bin/cpp/includes/WriteConfusionMatrix.hpp
-
+!bin/cpp/src
+!bin/cpp/src/ExtractSampleFromVectorFile.cxx
