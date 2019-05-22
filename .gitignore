@@ -4,6 +4,7 @@
 # python scrits
 !.gitignore
 !README.md
+!env_sensagri
 !bin
 !bin/env
 !bin/scripts
