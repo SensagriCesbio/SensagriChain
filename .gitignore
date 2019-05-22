@@ -39,6 +39,7 @@
 !bin/cpp/MainPrograms
 !bin/cpp/MainPrograms/RFClassificationVI.cxx
 !bin/cpp/MainPrograms/RemoveNul.cxx
+!bin/cpp/MainPrograms/ReadProfiles.cxx
 !bin/cpp/MainPrograms/JoinOpticalAndRadar.cxx
 !bin/cpp/MainPrograms/OptRadRFClassificationVI.cxx
 !bin/cpp/MainPrograms/FusionMap.cxx
@@ -52,4 +53,5 @@
 !bin/cpp/includes/ExtractSampleFromVectorFile.hpp
 !bin/cpp/includes/ReadWriteSamples.hpp
 !bin/cpp/includes/WriteConfusionMatrix.hpp
-
+!bin/cpp/src
+!bin/cpp/src/ExtractSampleFromVectorFile.cxx
