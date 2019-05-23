@@ -9,7 +9,7 @@
 # python scrits
 !.gitignore
 !README.md
-!env_sensagri
+!sensagri.profile
 !bin
 !bin/env
 !bin/scripts
