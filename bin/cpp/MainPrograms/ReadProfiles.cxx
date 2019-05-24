@@ -17,7 +17,7 @@
 #include <stdexcept>
 #include <math.h>
 
-#include <TemporalAxisLinearInterpolator.hpp>
+//#include <TemporalAxisLinearInterpolator.hpp>
 #include <tuple>
 #include <itkVariableLengthVector.h>
 #include <vector>
