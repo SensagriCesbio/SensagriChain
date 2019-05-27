@@ -55,3 +55,27 @@
 !bin/cpp/includes/WriteConfusionMatrix.hpp
 !bin/cpp/src
 !bin/cpp/src/ExtractSampleFromVectorFile.cxx
+
+# Probability Classifier
+!bin/cpp/ProbabilityClassifier
+!bin/cpp/ProbabilityClassifier/build
+!bin/cpp/ProbabilityClassifier/src
+!bin/cpp/ProbabilityClassifier/src/CMakeLists.txt
+!bin/cpp/ProbabilityClassifier/src/CvRTreesWrapper.cxx
+!bin/cpp/ProbabilityClassifier/src/CvRTreesWrapper.h
+!bin/cpp/ProbabilityClassifier/src/ImageClassificationFilter.h
+!bin/cpp/ProbabilityClassifier/src/ImageClassificationFilter.txx
+!bin/cpp/ProbabilityClassifier/src/MachineLearningModelFactory.h
+!bin/cpp/ProbabilityClassifier/src/MachineLearningModelFactory.txx
+!bin/cpp/ProbabilityClassifier/src/MachineLearningModel.h
+!bin/cpp/ProbabilityClassifier/src/MachineLearningModel.txx
+!bin/cpp/ProbabilityClassifier/src/otbProbRFClassification.cxx
+!bin/cpp/ProbabilityClassifier/src/otbProbRFClassification-save.cxx
+!bin/cpp/ProbabilityClassifier/src/otbRFClassification.cxx
+!bin/cpp/ProbabilityClassifier/src/RandomForestsMachineLearningModelFactory.h
+!bin/cpp/ProbabilityClassifier/src/RandomForestsMachineLearningModelFactory.txx
+!bin/cpp/ProbabilityClassifier/src/RandomForestsMachineLearningModel.h
+!bin/cpp/ProbabilityClassifier/src/RandomForestsMachineLearningModel.txx
+!bin/cpp/ProbabilityClassifier/src/ReadWriteSamples.hpp
+!bin/cpp/ProbabilityClassifier/src/RFClassification.cxx
+!bin/cpp/ProbabilityClassifier/src/WriteConfusionMatrix.hpp
