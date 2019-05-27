@@ -358,7 +358,8 @@ def ExportResults(fileconf):
         errline = []
         for i in range(ND): 
           for Fs in ListFS:
-            line.append(Fs[i])
+            #line.append(Fs[i])
+            line.append(Fs[i]/100.0)
             barline.append(Fs[i])
           for Err in ListErr:
             errline.append(Err[i])

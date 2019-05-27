@@ -11,10 +11,10 @@ class latexdoc:
     """
     # Constructor #
     def __init__(self,outputfile,verbose=False):
-        directory = sys.path[0]
+        directory = os.environ["SENSAGRICHAIN_HOME"] +"/bin/scripts/tolatex/" 
         self.outputfile = outputfile + ".tex"
 	self.verbose = verbose
-        with open(directory + "/template.tex","r") as f:
+        with open(directory + "template.tex","r") as f:
             self.template = f.readlines()
             f.close()
         self.f = open(self.outputfile,"w")
