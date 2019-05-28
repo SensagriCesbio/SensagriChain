@@ -31,8 +31,10 @@
 !bin/scripts/tolatex/tolatex.py
 !bin/scripts/tolatex/__init__.py
 
-# Main cpp programs
+# CHDB
+!bin/chdb.tar.gz
 
+# Main cpp programs
 !bin/cpp
 !bin/cpp/build
 !bin/cpp/build/build.txt
