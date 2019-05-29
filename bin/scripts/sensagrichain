@@ -17,6 +17,7 @@ import GenerateCommonDates as gcdates
 import PlotStatisticsNew as psn
 import matplotlib.pyplot as plt
 import matplotlib.backends.backend_pdf as mpdf
+import datetime
 from dates import GetDates,GetDatesSentinel
 import tolatex.tolatex as latex
 from time import gmtime, strftime
@@ -525,6 +526,19 @@ def ExportResults(fileconf):
    # p2
  
 
+def ExecuteJob(jobfile):
+	timetag = datetime.datetime.now().strftime("%y%m%d-%H%M%S")
+        logfile = jobfile[:-3] + "-%s.log"%(timetag) 
+	excom = "bash %s > %s 2>&1 &"%(jobfile,logfile)
+        try:
+		os.system(excom)
+                print "The job %s is running"%(jobfile)
+	        print "To monitor this job, use the commands:"
+	        print "log %s (for standard outputs)"%(logfile)
+	        print "dbg %s (for details outpute)"%(logfile)
+	        print ">more %s (for all the output)"%(logfile)
+	except:
+		print "ERROR: Something went wrong with the job %s"%(jobfile)
 
 # Header of the SLURM script that is going to be generated accorinding to the joborder setting #
 header = string.Template("""#SBATCH --job-name=$name
@@ -938,11 +952,12 @@ if __name__ == "__main__":
     parser.add_argument("-w", "--workdir", help="Create work directory WORKDIR. If specified, config is not compulsory")
     parser.add_argument("-r", "--results", help="Export statistical results according to configuration file")
     parser.add_argument("-u", "--update", help="Update job order according to files presents in the directory")
+    parser.add_argument("-x", "--execute", help="Execute job with logfiles management")
     args=parser.parse_args()
  
-    if args.workdir==None and args.config==None and args.results==None and args.update==None:
+    if args.workdir==None and args.config==None and args.results==None and args.update==None and args.execute==None:
         # Handle help message because mutual exclusive option required it.
-        print "usage: sensagrichain [-h] [-w WORKDIR] [-u] [-r] config"
+        print "usage: sensagrichain [-h] [-w WORKDIR] [-u] [-r] config [-x] job.sh"
         print "sensagrichain: error: too few arguments"
         quit()
 
@@ -957,6 +972,12 @@ if __name__ == "__main__":
     if args.results!=None:
         ExportResults(args.results)
         quit()
+
+    if args.execute!=None:
+        ExecuteJob(args.execute)
+        quit()
+
+
 
     config = ConfigParser.ConfigParser()
     namecfg = config.read(args.config)

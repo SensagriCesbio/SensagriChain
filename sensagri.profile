@@ -20,3 +20,5 @@ export ITK_AUTOLOAD_PATH=${SSOTB_HOME}/otb/applications/
 PATH=$PATH:~/SenSAgriChain/bin/scripts
 PATH=$PATH:~/SenSAgriChain/bin/OTB/Executables
 
+alias log="cat $1 | grep 'LOG'"
+alias dbg="cat $1 | grep 'DBG'"
