@@ -84,3 +84,24 @@
 !bin/cpp/ProbabilityClassifier/src/ReadWriteSamples.hpp
 !bin/cpp/ProbabilityClassifier/src/RFClassification.cxx
 !bin/cpp/ProbabilityClassifier/src/WriteConfusionMatrix.hpp
+
+# CreateProbabilityMap
+!bin/cpp/CreateProbabilityMap
+!bin/cpp/CreateProbabilityMap/build
+!bin/cpp/CreateProbabilityMap/build/build.txt
+!bin/cpp/CreateProbabilityMap/src
+!bin/cpp/CreateProbabilityMap/src/CMakeLists.txt
+!bin/cpp/CreateProbabilityMap/src/CvRTreesWrapper.cxx
+!bin/cpp/CreateProbabilityMap/src/CvRTreesWrapper.h
+!bin/cpp/CreateProbabilityMap/src/ImageClassificationFilter.h
+!bin/cpp/CreateProbabilityMap/src/ImageClassificationFilter.txx
+!bin/cpp/CreateProbabilityMap/src/MachineLearningModelFactory.h
+!bin/cpp/CreateProbabilityMap/src/MachineLearningModelFactory.txx
+!bin/cpp/CreateProbabilityMap/src/MachineLearningModel.h
+!bin/cpp/CreateProbabilityMap/src/MachineLearningModel.txx
+!bin/cpp/CreateProbabilityMap/src/otbRFClassification.cxx
+!bin/cpp/CreateProbabilityMap/src/RandomForestsMachineLearningModelFactory.h
+!bin/cpp/CreateProbabilityMap/src/RandomForestsMachineLearningModelFactory.txx
+!bin/cpp/CreateProbabilityMap/src/RandomForestsMachineLearningModel.h
+!bin/cpp/CreateProbabilityMap/src/RandomForestsMachineLearningModel.txx
+
