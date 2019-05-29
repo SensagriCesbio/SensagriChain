@@ -545,8 +545,9 @@ printlog () {
 printdebug () {
   echo DBG $$(date +'%d/%m/%Y-%H:%M:%S'): $$1
 }
-# Load and unload specific module here #
-$loadmodules
+
+# Add system options here #
+$sysoptions
 
 #dirname=/tmpdir/$$USER/$$SLURM_JOBID
 dirname=$workdir
@@ -994,9 +995,9 @@ if __name__ == "__main__":
 	    sruncom = "mpirun" # or srun
 
     try:
-	    loadmodules = json.loads(config.get("Parameters","LoadModules"))
+	    sysoptions = json.loads(config.get("Parameters","SystemOptions"))
     except:
-	    loadmodules =  "### No module loaded ###"
+	    sysoptions =  "### No options added ###"
      
 
     # Size Errors Manager
@@ -1147,7 +1148,7 @@ if __name__ == "__main__":
     'email':Email,
     'mailtype':EmailType,
     'workdir':workdir,
-    'loadmodules':loadmodules
+    'sysoptions':sysoptions
     }
 
 
