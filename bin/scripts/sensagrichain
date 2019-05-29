@@ -534,9 +534,9 @@ def ExecuteJob(jobfile):
 		os.system(excom)
                 print "The job %s is running"%(jobfile)
 	        print "To monitor this job, use the commands:"
-	        print "log %s (for standard outputs)"%(logfile)
-	        print "dbg %s (for details outpute)"%(logfile)
-	        print ">more %s (for all the output)"%(logfile)
+	        print "log %s (for standard output)"%(logfile)
+	        print "dbg %s (for details output)"%(logfile)
+	        print "more %s (for all the output)"%(logfile)
 	except:
 		print "ERROR: Something went wrong with the job %s"%(jobfile)
 
