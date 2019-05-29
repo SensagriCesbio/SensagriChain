@@ -10,6 +10,7 @@
 !.gitignore
 !README.md
 !sensagri.profile
+!install.sh
 !bin
 !bin/env
 !bin/scripts
@@ -32,7 +33,7 @@
 !bin/scripts/tolatex/__init__.py
 
 # CHDB
-!bin/chdb.tar.gz
+!chdb.tar.gz
 
 # Main cpp programs
 !bin/cpp
