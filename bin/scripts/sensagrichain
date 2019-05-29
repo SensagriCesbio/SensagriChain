@@ -545,10 +545,8 @@ printlog () {
 printdebug () {
   echo DBG $$(date +'%d/%m/%Y-%H:%M:%S'): $$1
 }
-# Load MPI module #
-module purge
-module load intel/18.2 intelmpi/18.2 chdb/1.0 sensagri
-
+# Load and unload specific module here #
+$loadmodules
 
 #dirname=/tmpdir/$$USER/$$SLURM_JOBID
 dirname=$workdir
@@ -578,28 +576,28 @@ cp -r $CreationDir0 $CreationDir
 chdbOverFile = string.Template("""
 # $step #
 printlog "$step"
-srun -n $ntasks chdb --in-dir $indir --out-dir $outdir --in-type $intype --command-line '$$SENSAGRICHAIN_HOME/bin/cpp/Executables/$prog $arg' --out-files %out-dir%/%dirname%/%basename%.out --report $report
+$srun -n $ntasks chdb --in-dir $indir --out-dir $outdir --in-type $intype --command-line '$$SENSAGRICHAIN_HOME/bin/cpp/Executables/$prog $arg' --out-files %out-dir%/%dirname%/%basename%.out --report $report
 """)
 
 chdbExtraction = string.Template("""
 # $step #
 printlog "$step"
 mkdir -p $createdir
-srun -n $ntasks chdb --in-dir $indir --out-dir $outdir --in-type $intype --command-line '$$SENSAGRICHAIN_HOME/bin/cpp/Executables/$prog $arg' --out-files %out-dir%/%dirname%/%basename%.out --report $report
+$srun -n $ntasks chdb --in-dir $indir --out-dir $outdir --in-type $intype --command-line '$$SENSAGRICHAIN_HOME/bin/cpp/Executables/$prog $arg' --out-files %out-dir%/%dirname%/%basename%.out --report $report
 """)
 
 
 chdbOverDir = string.Template("""
 # $step #
 printlog "$step"
-srun -n $ntasks chdb --in-type dir --in-dir $indir --command-line "$$SENSAGRICHAIN_HOME/bin/cpp/Executables/$prog $arg" --report $report
+$srun -n $ntasks chdb --in-type dir --in-dir $indir --command-line "$$SENSAGRICHAIN_HOME/bin/cpp/Executables/$prog $arg" --report $report
 rm -r $indir.out
 """)
 
 chdbOverDirNormal = string.Template("""
 # $step #
 printlog "$step"
-srun -n $ntasks chdb --in-type dir --in-dir $indir --command-line "$prog $arg" --report $report
+$srun -n $ntasks chdb --in-type dir --in-dir $indir --command-line "$prog $arg" --report $report
 rm -r $indir.out
 """)
 
@@ -608,19 +606,19 @@ rm -r $indir.out
 chdbOverDirCmd = string.Template("""
 # $step #
 printlog "$step"
-srun -n $ntasks chdb --in-type dir --in-dir $indir --out-dir $outdir --command-line "$cmd" --report $report
+$srun -n $ntasks chdb --in-type dir --in-dir $indir --out-dir $outdir --command-line "$cmd" --report $report
 """)
 
 remove = string.Template("""
 # $step #
 printlog "$step"
-srun -n $ntasks chdb --in-type dir --in-dir $root/Optical --command-line "$$SENSAGRICHAIN_HOME/bin/cpp/Executables/RemoveNul %in-dir%/%path%/CropTypeLabels_val.txt %in-dir%/../Radar/%path%/CropTypeLabels_val.txt"
+$srun -n $ntasks chdb --in-type dir --in-dir $root/Optical --command-line "$$SENSAGRICHAIN_HOME/bin/cpp/Executables/RemoveNul %in-dir%/%path%/CropTypeLabels_val.txt %in-dir%/../Radar/%path%/CropTypeLabels_val.txt"
 rm -r $root/Optical.out
 
-srun -n $ntasks chdb --in-type dir --in-dir $root/Optical --command-line "$$SENSAGRICHAIN_HOME/bin/cpp/Executables/RemoveNul %in-dir%/%path%/CropTypeLabels_learn.txt %in-dir%/../Radar/%path%/CropTypeLabels_learn.txt"
+$srun -n $ntasks chdb --in-type dir --in-dir $root/Optical --command-line "$$SENSAGRICHAIN_HOME/bin/cpp/Executables/RemoveNul %in-dir%/%path%/CropTypeLabels_learn.txt %in-dir%/../Radar/%path%/CropTypeLabels_learn.txt"
 rm -r $root/Optical.out
 
-srun -n $ntasks chdb --in-type dir --in-dir $root/Radar --command-line "$$SENSAGRICHAIN_HOME/bin/cpp/Executables/RemoveNul %in-dir%/%path%/CropTypeLabels_val.txt %in-dir%/../Optical/%path%/CropTypeLabels_val.txt"
+$srun -n $ntasks chdb --in-type dir --in-dir $root/Radar --command-line "$$SENSAGRICHAIN_HOME/bin/cpp/Executables/RemoveNul %in-dir%/%path%/CropTypeLabels_val.txt %in-dir%/../Optical/%path%/CropTypeLabels_val.txt"
 rm -r $root/Radar.out
 
 srun -n $ntasks chdb --in-type dir --in-dir $root/Radar --command-line "$$SENSAGRICHAIN_HOME/bin/cpp/Executables/RemoveNul %in-dir%/%path%/CropTypeLabels_learn.txt %in-dir%/../Optical/%path%/CropTypeLabels_learn.txt"
@@ -655,7 +653,7 @@ chdbLoopDir = string.Template("""
 $loop
 do
   printdebug "------- $step -------: Date $${i}"
-  srun -n $ntasks chdb --in-type dir --in-dir $indir --command-line "$$SENSAGRICHAIN_HOME/bin/cpp/Executables/$prog $arg"
+  $srun -n $ntasks chdb --in-type dir --in-dir $indir --command-line "$$SENSAGRICHAIN_HOME/bin/cpp/Executables/$prog $arg"
   rm -r $indir.out
 done
 """)
@@ -677,7 +675,7 @@ printlog "Classification $step $case $method"
 $loop
 do
   printdebug "------- $step: $case $method -------: Date $${i}"
-  srun -n $ntasks chdb --in-type dir --in-dir $indir --command-line "otbApplicationLauncherCommandLine RFClassification $$SENSAGRICHAIN_HOME/bin/cpp/ProbabilityClassifier/build -trainprofiles Profiles_learn${case}_$NbSamples${method}.txt -valprofiles Profiles_val${case}${method}.txt -bands $NbChannels -dates $${i} -model Classifications/Models/Model${case}${method}_Date$${i}.txt -trainlabels CropTypeLabels_learn${case}_$NbSamples.txt -vallabels CropTypeLabels_val${case}.txt -predlabels Classifications/PredictedLabels/PredictedLabels${case}${method}_Date$${i}.txt -conf Classifications/Confidence/Confidence${case}${method}_Date$${i}.txt -prob Classifications/Probabilities/Probabilities${case}${method}_Date$${i}.txt -cmatrix Classifications/ConfusionsMatrices/ConfusionsMatrix${case}${method}_Date$${i}.csv -vi Classifications/VariablesImportances/VariablesImportances${case}${method}_Date$${i}.txt -nomen $nomen${case}.csv
+  $srun -n $ntasks chdb --in-type dir --in-dir $indir --command-line "otbApplicationLauncherCommandLine RFClassification $$SENSAGRICHAIN_HOME/bin/cpp/ProbabilityClassifier/build -trainprofiles Profiles_learn${case}_$NbSamples${method}.txt -valprofiles Profiles_val${case}${method}.txt -bands $NbChannels -dates $${i} -model Classifications/Models/Model${case}${method}_Date$${i}.txt -trainlabels CropTypeLabels_learn${case}_$NbSamples.txt -vallabels CropTypeLabels_val${case}.txt -predlabels Classifications/PredictedLabels/PredictedLabels${case}${method}_Date$${i}.txt -conf Classifications/Confidence/Confidence${case}${method}_Date$${i}.txt -prob Classifications/Probabilities/Probabilities${case}${method}_Date$${i}.txt -cmatrix Classifications/ConfusionsMatrices/ConfusionsMatrix${case}${method}_Date$${i}.csv -vi Classifications/VariablesImportances/VariablesImportances${case}${method}_Date$${i}.txt -nomen $nomen${case}.csv
 "
   rm -r $indir.out 
 done
@@ -687,7 +685,7 @@ chdbClassif = string.Template("""
 # Classification $step $case $method #
 printlog "Classification $step $case $method"
 printdebug "------- $step: $case $method -------: Dates: ${dateslist}"
-srun -n $ntasks chdb --in-type dir --in-dir $indir --command-line "otbApplicationLauncherCommandLine RFClassification $$SENSAGRICHAIN_HOME/bin/cpp/ProbabilityClassifier/build -trainprofiles Profiles_learn${case}_$NbSamples${method}.txt -valprofiles Profiles_val${case}${method}.txt -bands $NbChannels -dateslist ${dateslist} -model Classifications/Models/Model${case}${method} -trainlabels CropTypeLabels_learn${case}_$NbSamples.txt -vallabels CropTypeLabels_val${case}.txt -predlabels Classifications/PredictedLabels/PredictedLabels${case}${method} -conf Classifications/Confidence/Confidence${case}${method} -prob Classifications/Probabilities/Probabilities${case}${method} -cmatrix Classifications/ConfusionsMatrices/ConfusionsMatrix${case}${method} -vi Classifications/VariablesImportances/VariablesImportances${case}${method} -nomen $nomen${case}.csv
+$srun -n $ntasks chdb --in-type dir --in-dir $indir --command-line "otbApplicationLauncherCommandLine RFClassification $$SENSAGRICHAIN_HOME/bin/cpp/ProbabilityClassifier/build -trainprofiles Profiles_learn${case}_$NbSamples${method}.txt -valprofiles Profiles_val${case}${method}.txt -bands $NbChannels -dateslist ${dateslist} -model Classifications/Models/Model${case}${method} -trainlabels CropTypeLabels_learn${case}_$NbSamples.txt -vallabels CropTypeLabels_val${case}.txt -predlabels Classifications/PredictedLabels/PredictedLabels${case}${method} -conf Classifications/Confidence/Confidence${case}${method} -prob Classifications/Probabilities/Probabilities${case}${method} -cmatrix Classifications/ConfusionsMatrices/ConfusionsMatrix${case}${method} -vi Classifications/VariablesImportances/VariablesImportances${case}${method} -nomen $nomen${case}.csv
 "
 rm -r $indir.out
 """)
@@ -696,7 +694,7 @@ chdbClassifMixModel = string.Template("""
 # Classification Mix. Use previous train model and evaluate validation: $step $case $method #
 printlog "Classification Mix. Use previous train model and evaluate validation: $step $case $method"
 export pathusemodel=$usemodel
-srun -n $ntasks chdb --in-type dir --in-dir $indir --command-line "otbApplicationLauncherCommandLine RFClassification $$SENSAGRICHAIN_HOME/bin/cpp/ProbabilityClassifier/build -trainprofiles Profiles_learn${case}_$NbSamples${method}.txt -valprofiles Profiles_val${case}${method}.txt -bands $NbChannels -dateslist ${dateslist} -model Classifications/null -usemodel $$pathusemodel -trainlabels CropTypeLabels_learn${case}_$NbSamples.txt -vallabels CropTypeLabels_val${case}.txt -predlabels Classifications/PredictedLabels/PredictedLabels${case}${method}${modelid} -conf Classifications/Confidence/Confidence${case}${method}${modelid} -prob Classifications/Probabilities/Probabilities${case}${method}${modelid} -cmatrix Classifications/ConfusionsMatrices/ConfusionsMatrix${case}${method}${modelid} -vi Classifications/VariablesImportances/VariablesImportances${case}${method}${modelid} -nomen $nomen${case}.csv
+$srun -n $ntasks chdb --in-type dir --in-dir $indir --command-line "otbApplicationLauncherCommandLine RFClassification $$SENSAGRICHAIN_HOME/bin/cpp/ProbabilityClassifier/build -trainprofiles Profiles_learn${case}_$NbSamples${method}.txt -valprofiles Profiles_val${case}${method}.txt -bands $NbChannels -dateslist ${dateslist} -model Classifications/null -usemodel $$pathusemodel -trainlabels CropTypeLabels_learn${case}_$NbSamples.txt -vallabels CropTypeLabels_val${case}.txt -predlabels Classifications/PredictedLabels/PredictedLabels${case}${method}${modelid} -conf Classifications/Confidence/Confidence${case}${method}${modelid} -prob Classifications/Probabilities/Probabilities${case}${method}${modelid} -cmatrix Classifications/ConfusionsMatrices/ConfusionsMatrix${case}${method}${modelid} -vi Classifications/VariablesImportances/VariablesImportances${case}${method}${modelid} -nomen $nomen${case}.csv
 "
 rm -r $indir.out
 """)
@@ -705,7 +703,7 @@ chdbClassifMixApply = string.Template("""
 # Classification Mix. Apply previous train model to training set label: $step $case $method #
 printlog "Classification Mix. Apply previous train model to training set label: $step $case $method"
 export pathusemodel=$usemodel
-srun -n $ntasks chdb --in-type dir --in-dir $indir --command-line "otbApplicationLauncherCommandLine RFClassification $$SENSAGRICHAIN_HOME/bin/cpp/ProbabilityClassifier/build -trainprofiles Profiles_learn${case}_$NbSamples${method}.txt -valprofiles Profiles_learn${case}${method}.txt -bands $NbChannels -dateslist ${dateslist} -model Classifications/null -usemodel $$pathusemodel -trainlabels CropTypeLabels_learn${case}_$NbSamples.txt -vallabels CropTypeLabels_learn${case}.txt -predlabels CropTypeLabels${case}_pred${appid} -conf Classifications/Confidence/Confidence${case}${method}${appid} -prob Classifications/Probabilities/Probabilities${case}${method}${appid} -cmatrix Classifications/ConfusionsMatrices/ConfusionsMatrix${case}${method}${appid} -vi Classifications/VariablesImportances/VariablesImportances${case}${method}${appid} -nomen $nomen${case}.csv
+$srun -n $ntasks chdb --in-type dir --in-dir $indir --command-line "otbApplicationLauncherCommandLine RFClassification $$SENSAGRICHAIN_HOME/bin/cpp/ProbabilityClassifier/build -trainprofiles Profiles_learn${case}_$NbSamples${method}.txt -valprofiles Profiles_learn${case}${method}.txt -bands $NbChannels -dateslist ${dateslist} -model Classifications/null -usemodel $$pathusemodel -trainlabels CropTypeLabels_learn${case}_$NbSamples.txt -vallabels CropTypeLabels_learn${case}.txt -predlabels CropTypeLabels${case}_pred${appid} -conf Classifications/Confidence/Confidence${case}${method}${appid} -prob Classifications/Probabilities/Probabilities${case}${method}${appid} -cmatrix Classifications/ConfusionsMatrices/ConfusionsMatrix${case}${method}${appid} -vi Classifications/VariablesImportances/VariablesImportances${case}${method}${appid} -nomen $nomen${case}.csv
 "
 rm -r $indir.out
 """)
@@ -714,7 +712,7 @@ chdbClassifMixTrain = string.Template("""
 # Classification Mix Construct coherent training set: $step $case $method #
 printlog "Classification Mix Construct coherent training set: $step $case $method"
 printdebug "------- $step: $case $method -------: Dates: ${dateslist}"
-srun -n $ntasks chdb --in-type dir --in-dir $indir --command-line "$$SENSAGRICHAIN_HOME/bin/scripts/SamplingSelection.py $$dirname/WorkFiles/Classes_CROP.txt ${previous}/CropTypeLabels_learn${case}_$NbSamples.txt CropTypeLabels_pred${appid}_$NbSamples.txt ${previous}/Profiles_learn${case}_$NbSamples${method}.txt Profiles_pred${appid}_$NbSamples.txt CropMix"
+$srun -n $ntasks chdb --in-type dir --in-dir $indir --command-line "$$SENSAGRICHAIN_HOME/bin/scripts/SamplingSelection.py $$dirname/WorkFiles/Classes_CROP.txt ${previous}/CropTypeLabels_learn${case}_$NbSamples.txt CropTypeLabels_pred${appid}_$NbSamples.txt ${previous}/Profiles_learn${case}_$NbSamples${method}.txt Profiles_pred${appid}_$NbSamples.txt CropMix"
 rm -r $indir.out
 """)
 
@@ -722,7 +720,7 @@ chdbClassifMixCla = string.Template("""
 # Classification Mix Final Classification: $step $case $method #
 printlog "Classification Mix final Classification $step $case $method"
 printdebug "------- $step: $case $method -------: Dates: ${dateslist}"
-srun -n $ntasks chdb --in-type dir --in-dir $indir --command-line "otbApplicationLauncherCommandLine RFClassification $$SENSAGRICHAIN_HOME/bin/cpp/ProbabilityClassifier/build -trainprofiles Profiles_pred${appid}_${NbSamples}_CropMix.txt -valprofiles Profiles_val${case}${method}.txt -bands $NbChannels -dateslist ${dateslist} -model Classifications/Models/Model${case}${method}${mixid} -trainlabels CropTypeLabels_pred${appid}_${NbSamples}_CropMix.txt -vallabels CropTypeLabels_val${case}.txt -predlabels Classifications/PredictedLabels/PredictedLabels${case}${method}${mixid} -conf Classifications/Confidence/Confidence${case}${method}${mixid} -prob Classifications/Probabilities/Probabilities${case}${method}${mixid} -cmatrix Classifications/ConfusionsMatrices/ConfusionsMatrix${case}${method}${mixid} -vi Classifications/VariablesImportances/VariablesImportances${case}${method}${mixid} -nomen $nomen${case}.csv
+$srun -n $ntasks chdb --in-type dir --in-dir $indir --command-line "otbApplicationLauncherCommandLine RFClassification $$SENSAGRICHAIN_HOME/bin/cpp/ProbabilityClassifier/build -trainprofiles Profiles_pred${appid}_${NbSamples}_CropMix.txt -valprofiles Profiles_val${case}${method}.txt -bands $NbChannels -dateslist ${dateslist} -model Classifications/Models/Model${case}${method}${mixid} -trainlabels CropTypeLabels_pred${appid}_${NbSamples}_CropMix.txt -vallabels CropTypeLabels_val${case}.txt -predlabels Classifications/PredictedLabels/PredictedLabels${case}${method}${mixid} -conf Classifications/Confidence/Confidence${case}${method}${mixid} -prob Classifications/Probabilities/Probabilities${case}${method}${mixid} -cmatrix Classifications/ConfusionsMatrices/ConfusionsMatrix${case}${method}${mixid} -vi Classifications/VariablesImportances/VariablesImportances${case}${method}${mixid} -nomen $nomen${case}.csv
 "
 rm -r $indir.out
 """)
@@ -736,11 +734,11 @@ $loop
 do IFS=","
   set -- $$i
   printdebug "------- OSO + Red Edge:  _OSORE -------: Date $${1} $${2}"
-  srun -n $ntasks chdb --in-type dir --in-dir $root/AllTiles/Optical --command-line "CalculateStatistics ${root}/AllTiles/Radar/%path%/Classifications/Probabilities/Probabilities_Date$${1}.txt Classifications/Probabilities/Probabilities${method}_Date$${2}.txt CropTypeLabels_val.txt ${root}/WorkFiles/Classes.txt ${root}/AllTiles/Fusion/%path%/Classifications/ConfusionsMatrices/ConfusionsMatrix_Fusion${method}_Date$${2}.csv BinaryCropLabels_val.txt ${root}/WorkFiles/Binary.txt ${root}/AllTiles/Radar/%path%/Classifications/ConfusionsMatrices/ConfusionsMatrix_CM_Date$${1}.csv ${root}/AllTiles/Optical/%path%/Classifications/ConfusionsMatrices/ConfusionsMatrix_CM${method}_Date$${2}.csv ${root}/AllTiles/Fusion/%path%/Classifications/ConfusionsMatrices/ConfusionsMatrix_CM_Fusion${method}_Date$${2}.csv"
+  $srun -n $ntasks chdb --in-type dir --in-dir $root/AllTiles/Optical --command-line "CalculateStatistics ${root}/AllTiles/Radar/%path%/Classifications/Probabilities/Probabilities_Date$${1}.txt Classifications/Probabilities/Probabilities${method}_Date$${2}.txt CropTypeLabels_val.txt ${root}/WorkFiles/Classes.txt ${root}/AllTiles/Fusion/%path%/Classifications/ConfusionsMatrices/ConfusionsMatrix_Fusion${method}_Date$${2}.csv BinaryCropLabels_val.txt ${root}/WorkFiles/Binary.txt ${root}/AllTiles/Radar/%path%/Classifications/ConfusionsMatrices/ConfusionsMatrix_CM_Date$${1}.csv ${root}/AllTiles/Optical/%path%/Classifications/ConfusionsMatrices/ConfusionsMatrix_CM${method}_Date$${2}.csv ${root}/AllTiles/Fusion/%path%/Classifications/ConfusionsMatrices/ConfusionsMatrix_CM_Fusion${method}_Date$${2}.csv"
   rm -r $root/AllTiles/Optical.out
 
   printdebug "------- OSO + Red Edge:  CROP_OSORE -------: Date $${1} $${2}"
-  srun -n $ntasks chdb --in-type dir --in-dir $root/AllTiles/Optical --command-line "CalculateStatistics ${root}/AllTiles/Radar/%path%/Classifications/Probabilities/Probabilities_CROP_Date$${1}.txt Classifications/Probabilities/Probabilities_CROP${method}_Date$${2}.txt CropTypeLabels_val_CROP.txt ${root}/WorkFiles/Classes_CROP.txt ${root}/AllTiles/Fusion/%path%/Classifications/ConfusionsMatrices/ConfusionsMatrix_CROP_Fusion${method}_Date$${2}.csv"
+  $srun -n $ntasks chdb --in-type dir --in-dir $root/AllTiles/Optical --command-line "CalculateStatistics ${root}/AllTiles/Radar/%path%/Classifications/Probabilities/Probabilities_CROP_Date$${1}.txt Classifications/Probabilities/Probabilities_CROP${method}_Date$${2}.txt CropTypeLabels_val_CROP.txt ${root}/WorkFiles/Classes_CROP.txt ${root}/AllTiles/Fusion/%path%/Classifications/ConfusionsMatrices/ConfusionsMatrix_CROP_Fusion${method}_Date$${2}.csv"
   rm -r $root/AllTiles/Optical.out
 
 done
@@ -767,26 +765,26 @@ printlog "Join S1 and S2 data - Learning set"
 dates="$path/WorkFiles/S1S2_DatesOrder.txt"
 infile="Profiles_learn_${NbSamples}.txt"
 infileOpt="Profiles_learn_${NbSamples}${method}.txt"
-srun -n $ntasks chdb --in-type dir --in-dir $path/AllTiles/Radar --command-line "$$SENSAGRICHAIN_HOME/bin/cpp/Executables/JoinOpticalAndRadar $$infile $path/AllTiles/Optical/%path%/$$infileOpt $path/AllTiles/RadarOptical/%path%/$$infileOpt $$dates $NbRad $NbOpt" --report Reports/JoinLearnReport.txt
+$srun -n $ntasks chdb --in-type dir --in-dir $path/AllTiles/Radar --command-line "$$SENSAGRICHAIN_HOME/bin/cpp/Executables/JoinOpticalAndRadar $$infile $path/AllTiles/Optical/%path%/$$infileOpt $path/AllTiles/RadarOptical/%path%/$$infileOpt $$dates $NbRad $NbOpt" --report Reports/JoinLearnReport.txt
 rm -r $path/AllTiles/Radar.out
 
 printlog "Join S1 and S2 data - Validation set"
 infile="Profiles_val.txt"
 infileOpt="Profiles_val${method}.txt"
-srun -n $ntasks chdb --in-type dir --in-dir $path/AllTiles/Radar --command-line "$$SENSAGRICHAIN_HOME/bin/cpp/Executables/JoinOpticalAndRadar $$infile $path/AllTiles/Optical/%path%/$$infileOpt $path/AllTiles/RadarOptical/%path%/$$infileOpt $$dates $NbRad $NbOpt" --report Reports/JoinValreport.txt
+$srun -n $ntasks chdb --in-type dir --in-dir $path/AllTiles/Radar --command-line "$$SENSAGRICHAIN_HOME/bin/cpp/Executables/JoinOpticalAndRadar $$infile $path/AllTiles/Optical/%path%/$$infileOpt $path/AllTiles/RadarOptical/%path%/$$infileOpt $$dates $NbRad $NbOpt" --report Reports/JoinValreport.txt
 rm -r $path/AllTiles/Radar.out
 
 printlog "Join S1 and S2 data - Learning set CROP"
 dates="$path/WorkFiles/S1S2_DatesOrder.txt"
 infile="Profiles_learn_CROP_${NbSamples}.txt"
 infileOpt="Profiles_learn_CROP_${NbSamples}${method}.txt"
-srun -n $ntasks chdb --in-type dir --in-dir $path/AllTiles/Radar --command-line "$$SENSAGRICHAIN_HOME/bin/cpp/Executables/JoinOpticalAndRadar $$infile $path/AllTiles/Optical/%path%/$$infileOpt $path/AllTiles/RadarOptical/%path%/$$infileOpt $$dates $NbRad $NbOpt" --report Reports/JoinLearnReport.txt
+$srun -n $ntasks chdb --in-type dir --in-dir $path/AllTiles/Radar --command-line "$$SENSAGRICHAIN_HOME/bin/cpp/Executables/JoinOpticalAndRadar $$infile $path/AllTiles/Optical/%path%/$$infileOpt $path/AllTiles/RadarOptical/%path%/$$infileOpt $$dates $NbRad $NbOpt" --report Reports/JoinLearnReport.txt
 rm -r $path/AllTiles/Radar.out
 
 printlog "Join S1 and S2 data - Validation set CROP"
 infile="Profiles_val_CROP.txt"
 infileOpt="Profiles_val_CROP${method}.txt"
-srun -n $ntasks chdb --in-type dir --in-dir $path/AllTiles/Radar --command-line "$$SENSAGRICHAIN_HOME/bin/cpp/Executables/JoinOpticalAndRadar $$infile $path/AllTiles/Optical/%path%/$$infileOpt $path/AllTiles/RadarOptical/%path%/$$infileOpt $$dates $NbRad $NbOpt" --report Reports/JoinValreport.txt
+$srun -n $ntasks chdb --in-type dir --in-dir $path/AllTiles/Radar --command-line "$$SENSAGRICHAIN_HOME/bin/cpp/Executables/JoinOpticalAndRadar $$infile $path/AllTiles/Optical/%path%/$$infileOpt $path/AllTiles/RadarOptical/%path%/$$infileOpt $$dates $NbRad $NbOpt" --report Reports/JoinValreport.txt
 rm -r $path/AllTiles/Radar.out
 """)
 
@@ -797,7 +795,7 @@ FS=$$'\n' read -d '' -r -a NbFeatures < ${path}/WorkFiles/S1S2_NbFeaturesPerDate
 $loop
 do
   printdebug "------- $step -------: Date $${i}"
-  srun -n $ntasks chdb --in-type dir --in-dir $path/AllTiles/RadarOptical --command-line "$$SENSAGRICHAIN_HOME/bin/cpp/Executables/OptRadRFClassificationVI Profiles_learn${case}_$NbSamples$method.txt CropTypeLabels_learn${case}_$NbSamples.txt Profiles_val$case$method.txt CropTypeLabels_val$case.txt Classifications/Models/Model_${name}_Date_$${i}.txt Classifications/PredictedLabels/PredictedLabels_${name}_Date$${i}.txt Classifications/ConfusionsMatrices/ConfusionsMatrix_${name}_Date$${i}.csv Classifications/VariablesImportances/VariablesImportances_${name}_Date$${i}.txt $${NbFeatures[$$((i-1))]} $$i"
+  $srun -n $ntasks chdb --in-type dir --in-dir $path/AllTiles/RadarOptical --command-line "$$SENSAGRICHAIN_HOME/bin/cpp/Executables/OptRadRFClassificationVI Profiles_learn${case}_$NbSamples$method.txt CropTypeLabels_learn${case}_$NbSamples.txt Profiles_val$case$method.txt CropTypeLabels_val$case.txt Classifications/Models/Model_${name}_Date_$${i}.txt Classifications/PredictedLabels/PredictedLabels_${name}_Date$${i}.txt Classifications/ConfusionsMatrices/ConfusionsMatrix_${name}_Date$${i}.csv Classifications/VariablesImportances/VariablesImportances_${name}_Date$${i}.txt $${NbFeatures[$$((i-1))]} $$i"
   rm -r $path/AllTiles/RadarOptical.out
 done
 """)
@@ -985,6 +983,22 @@ if __name__ == "__main__":
     radius = int(config.get('Parameters','RegularizationRadius'))
     OpticalNbFeatures = {"OPT":10, "OSO":13, "RE":12, "OSORE":15}
 
+    try:
+	    srunType = json.loads(config.get("Parameters","ParallelType"))
+    except:
+	    srunType = 1
+
+    try:
+	    sruncom = json.loads(config.get("Parameters","ParallelCom"))
+    except:
+	    sruncom = "mpirun" # or srun
+
+    try:
+	    loadmodules = json.loads(config.get("Parameters","LoadModules"))
+    except:
+	    loadmodules =  ### No module loaded ###"
+     
+
     # Size Errors Manager
     if(len(TilesList) != len(RadarImg) or len(TilesList) != len(OpticalImg) or len(TilesList) != len(Shapefiles)):
         print "ERROR:"
@@ -1132,7 +1146,8 @@ if __name__ == "__main__":
     'time':reservedtime,
     'email':Email,
     'mailtype':EmailType,
-    'workdir':workdir
+    'workdir':workdir,
+    'loadmodules',loadmodules
     }
 
 
@@ -1150,6 +1165,7 @@ if __name__ == "__main__":
     RadExt = {}
     for tile in TilesList:
         OptExt[tile] = {
+        'srun':sruncom,  
         'ntasks':NbRun+1,
         'intype':"shp",
         'step':"Optical Samples Extraction "+tile,
@@ -1163,6 +1179,7 @@ if __name__ == "__main__":
       
 
         RadExt[tile] = {
+        'srun':sruncom,  
         'ntasks':NbRun+1,
         'intype':"shp",
         'step':"Radar Samples Extraction "+tile,
@@ -1181,6 +1198,7 @@ if __name__ == "__main__":
         #}
 
     RadOptRem = {
+        'srun':sruncom,  
         'ntasks':NbRun+1,
         'step':"Radar and Optical Remove Null Sample Step",
         'root': workdir+"/AllTiles"
@@ -1209,6 +1227,7 @@ if __name__ == "__main__":
             cmdRad = cmdRad + "> %s/%s"%(alltiles,f)
         
         OptCon = {
+        'srun':sruncom,  
         'ntasks':NbRun+1,
         'step':"Optical Tiles Concatenation",
         'indir': indirOpt,
@@ -1218,6 +1237,7 @@ if __name__ == "__main__":
         }
         
         RadCon = {
+        'srun':sruncom,  
         'ntasks':NbRun+1,
         'step':"Radar Tiles Concatenation",
         'indir': indirRad,
@@ -1227,6 +1247,7 @@ if __name__ == "__main__":
         }
         
     OptCroLearn = {
+    'srun':sruncom,  
     'ntasks':NbRun+1,
     'indir': workdir+"/AllTiles/Optical",
     'step':"Optical Crop Filter Learning Set",
@@ -1236,6 +1257,7 @@ if __name__ == "__main__":
     }
     
     OptCroVal = {
+    'srun':sruncom,  
     'ntasks':NbRun+1,
     'indir': workdir+"/AllTiles/Optical",
     'step':"Optical Crop Filter Validation Set",
@@ -1245,6 +1267,7 @@ if __name__ == "__main__":
     }
     
     RadCroLearn = {
+    'srun':sruncom,  
     'ntasks':NbRun+1,
     'indir': workdir+"/AllTiles/Radar",
     'step':"Radar Crop Filter Learning Set",
@@ -1254,6 +1277,7 @@ if __name__ == "__main__":
     }
     
     RadCroVal = {
+    'srun':sruncom,  
     'ntasks':NbRun+1,
     'indir': workdir+"/AllTiles/Radar",
     'step':"Radar Crop Filter Validation Set",
@@ -1263,6 +1287,7 @@ if __name__ == "__main__":
     }
     
     OptSam = {
+    'srun':sruncom,  
     'ntasks':NbRun+1,
     'indir': workdir+"/AllTiles/Optical",
     'step':"Optical Random Sampling ",
@@ -1272,6 +1297,7 @@ if __name__ == "__main__":
     }
     
     OptCroSam = {
+    'srun':sruncom,  
     'ntasks':NbRun+1,
     'indir': workdir+"/AllTiles/Optical",
     'step':"Optical CROP Random Sampling ",
@@ -1281,6 +1307,7 @@ if __name__ == "__main__":
     }
     
     RadSam = {
+    'srun':sruncom,  
     'ntasks':NbRun+1,
     'indir': workdir+"/AllTiles/Radar",
     'step':"Radar Random Sampling ",
@@ -1290,6 +1317,7 @@ if __name__ == "__main__":
     }
     
     RadCroSam = {
+    'srun':sruncom,  
     'ntasks':NbRun+1,
     'indir': workdir+"/AllTiles/Radar",
     'step':"Radar CROP Random Sampling ",
@@ -1301,6 +1329,7 @@ if __name__ == "__main__":
     ### Indices #########################################
     
     OSOIndLearn = {
+    'srun':sruncom,  
     'ntasks':NbRun+1,
     'indir': workdir+"/AllTiles/Optical",
     'step':"Creation OSO Primitives Learning Set ",
@@ -1310,6 +1339,7 @@ if __name__ == "__main__":
     }
        
     OSOIndVal = {
+    'srun':sruncom,  
     'ntasks':NbRun+1,
     'indir': workdir+"/AllTiles/Optical",
     'step':"Creation OSO Primitives Validation Set ",
@@ -1319,6 +1349,7 @@ if __name__ == "__main__":
     }
     
     REIndLearn = {
+    'srun':sruncom,  
     'ntasks':NbRun+1,
     'indir': workdir+"/AllTiles/Optical",
     'step':"Creation Red Edge Primitives Learning Set ",
@@ -1328,6 +1359,7 @@ if __name__ == "__main__":
     }
        
     REIndVal = {
+    'srun':sruncom,  
     'ntasks':NbRun+1,
     'indir': workdir+"/AllTiles/Optical",
     'step':"Creation Red Edge Primitives Validation Set ",
@@ -1337,6 +1369,7 @@ if __name__ == "__main__":
     }
 
     OSOREIndLearn = {
+    'srun':sruncom,  
     'ntasks':NbRun+1,
     'indir': workdir+"/AllTiles/Optical",
     'step':"Creation OSO + Red Edge Primitives Learning Set ",
@@ -1346,6 +1379,7 @@ if __name__ == "__main__":
     }
        
     OSOREIndVal = {
+    'srun':sruncom,  
     'ntasks':NbRun+1,
     'indir': workdir+"/AllTiles/Optical",
     'step':"Creation OSO + Red Edge Primitives Validation Set ",
@@ -1396,6 +1430,7 @@ if __name__ == "__main__":
     OpticalStep = 5
     RadarStep = 10
     OptCla = {
+    'srun':sruncom,  
     'ntasks':NbRun+1,
     'NbSamples':NbSamples,
     'indir':"AllTiles/Optical",
@@ -1408,6 +1443,7 @@ if __name__ == "__main__":
     }
    
     RadCla = {
+    'srun':sruncom,  
     'ntasks':NbRun+1,
     'NbSamples':NbSamples,
     'indir':"AllTiles/Radar",
@@ -1420,6 +1456,7 @@ if __name__ == "__main__":
     }
     
     OSOCla = {
+    'srun':sruncom,  
     'ntasks':(NbRun/2)+1,
     'NbSamples':NbSamples,
     'indir':"AllTiles/Optical",
@@ -1432,6 +1469,7 @@ if __name__ == "__main__":
     }
     
     RECla ={
+    'srun':sruncom,  
     'ntasks':(NbRun/2)+1,
     'NbSamples':NbSamples,
     'indir':"AllTiles/Optical",
@@ -1444,6 +1482,7 @@ if __name__ == "__main__":
     }
 
     OSORECla ={
+    'srun':sruncom,  
     'ntasks':(NbRun/2)+1,
     'NbSamples':NbSamples,
     'indir':"AllTiles/Optical",
@@ -1457,6 +1496,7 @@ if __name__ == "__main__":
 
  
     JoinDic = {
+    'srun':sruncom,  
     'ntasks':(NbRun/2)+1,
     'NbSamples':NbSamples,
     'path': workdir,
@@ -1469,6 +1509,7 @@ if __name__ == "__main__":
     }
 
     ClaRadOpt = {
+    'srun':sruncom,  
     'step':"Radar + Optical Classification",
     'ntasks':NbRun/2+1,
     'NbSamples':NbSamples,
@@ -1480,6 +1521,7 @@ if __name__ == "__main__":
     }
 
     CropClaRadOpt = {
+    'srun':sruncom,  
     'step':"Radar + Optical Classification - CROP",
     'ntasks':NbRun/2+1,
     'path': workdir+"/AllTiles",
@@ -1492,7 +1534,8 @@ if __name__ == "__main__":
     }
    
     Stat = {
-    'ntasks':NbRun,
+    'srun':sruncom,  
+    'ntasks':NbRun+1,
     'method': "_" + QOption["Fusion"]["OpticalType"], 
     'root': workdir,
     'loop':loopRadOptFus
@@ -1500,15 +1543,18 @@ if __name__ == "__main__":
  
     ###### MAPS ################
 
-    # TO DO automatize sru choice
-    Qsrun = True
-
-    if Qsrun:
-	    srunstart= "srun --hint=nomultithread -N1 -n1 -c2 --exclusive "
-            srunend = "&"
-    else:
+    if srunType == 0:
+	    # Pure sequencial execution
 	    srunstart= ""
-            srunend = ""
+	    srunend = ""
+    if srunType == 1:
+	    # Parallele execution by the os
+	    srunstart= ""
+            srunend = "&"
+    if srunType == 2:
+	    # Complete parallele execution with srun
+	    srunstart= "srun --hint=nomultithread -N1 -n1 -c1 --exclusive "
+            srunend = "&"
 
     OptMap = {}
     RadMap = {}
@@ -1520,6 +1566,7 @@ if __name__ == "__main__":
     AppCM = {}
     for tile in TilesList:
         OptMap[tile] = {
+        'srun':sruncom,  
         'ntasks':NbRun+1,
         'step':"Optical",
         'case':"",
@@ -1533,6 +1580,7 @@ if __name__ == "__main__":
         }
     
         RadMap[tile] = {
+        'srun':sruncom,  
         'ntasks':NbRun+1,
         'step':"Radar",
         'case':"",
@@ -1546,6 +1594,7 @@ if __name__ == "__main__":
         }
    
         FusMap[tile] = {
+        'srun':sruncom,  
         'ntasks':NbRun+1,
         'step1':"Radar",
         'step2':"Optical",
@@ -1912,7 +1961,7 @@ if __name__ == "__main__":
     	        FusPro[tile]['tag1'] = tag1
                 FusPro[tile]['tag2'] = tag2
                 scriptfile.write(CreateProducts.substitute(FusPro[tile]))
-	    if(Qsrun): scriptfile.write("wait\n")
+	    if(srunType == 1 or srunType == 2): scriptfile.write("wait\n")
 
         if(QOption["Fusion"]["CreateProducts"]):
             for tile in TilesList:
@@ -1921,7 +1970,7 @@ if __name__ == "__main__":
     	        FusPro[tile]['tag1'] = tag1
                 FusPro[tile]['tag2'] = tag2
                 scriptfile.write(ApplyZeros.substitute(FusPro[tile]))
-	    if(Qsrun): scriptfile.write("wait\n")
+	    if(srunType == 1 or srunType == 2): scriptfile.write("wait\n")
             MosPro["ProductsList"] = ""
             for tile in TilesList:
 		    MosPro["ProductsList"] = MosPro["ProductsList"] + "%s/Products/%s%s_Products_%s_%s.tif "%(workdir,tile,FusPro[tile]["method"],tag1,tag2)
@@ -1929,7 +1978,7 @@ if __name__ == "__main__":
 
 
             scriptfile.write(CreateMosaic.substitute(MosPro))
-    if(Qsrun): scriptfile.write("wait\n")
+    if(srunType == 1 or srunType == 2): scriptfile.write("wait\n")
 
     for k in range(len(ProdRadDatesList)):
         date1 = ProdRadDatesList[k]    
