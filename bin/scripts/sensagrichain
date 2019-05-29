@@ -996,7 +996,7 @@ if __name__ == "__main__":
     try:
 	    loadmodules = json.loads(config.get("Parameters","LoadModules"))
     except:
-	    loadmodules =  ### No module loaded ###"
+	    loadmodules =  "### No module loaded ###"
      
 
     # Size Errors Manager
@@ -1147,7 +1147,7 @@ if __name__ == "__main__":
     'email':Email,
     'mailtype':EmailType,
     'workdir':workdir,
-    'loadmodules',loadmodules
+    'loadmodules':loadmodules
     }
 
 
