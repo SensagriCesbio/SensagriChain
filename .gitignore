@@ -52,6 +52,7 @@
 !bin/cpp/MainPrograms/ExtractSamplesNew.cxx
 !bin/cpp/MainPrograms/CropFilter.cxx
 !bin/cpp/MainPrograms/Sampling.cxx
+!bin/cpp/MainPrograms/CalculateStatistics.cxx
 !bin/cpp/MainPrograms/CreateOpticalPrimitives.cxx
 !bin/cpp/includes
 !bin/cpp/includes/ExtractSampleFromVectorFile.hpp
