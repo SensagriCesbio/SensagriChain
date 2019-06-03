@@ -7,6 +7,7 @@
 ######################################
 import sys
 import os
+import glob
 import subprocess
 import string
 import ConfigParser
@@ -105,9 +106,87 @@ def ManageStatistics(workdir,listvar):
 
 
 def UpdateJoborder(joborder):
-    print "Update Joborder"%(joborder)
-    print " NOT IMPLEMENTED YET (12/02/2019) !!!"
-    # Read input joborder:
+    print "*** Updating Joborder %s ***"%(joborder)
+    #print " NOT IMPLEMENTED YET (12/02/2019) !!!"
+
+    # Determine 
+    Qpattern = True
+    config = ConfigParser.ConfigParser()
+    namecfg = config.read(joborder)
+
+    # Get specific variabl form current job order # 
+    workdir = json.loads(config.get('Parameters',"WorkingDirectory"))
+    TilesList = json.loads(config.get('Parameters',"Tiles"))
+
+    imagesfiles = glob.glob(workdir + "/WorkFiles/Images/*.tif")
+    shapefiles  = glob.glob(workdir + "/WorkFiles/Shapefiles/*.shp")
+
+    images = [str(im.split("/")[-1]) for im in imagesfiles]
+    shapes = [str(sh.split("/")[-1]) for sh in shapefiles]
+	
+    newS1images = []
+    newS2images = []
+    newShapefiles = []
+
+    #if len(shapes) != len(TilesList):
+    #	for tile in TilesList:
+    #	    newShapefiles.append(shapes[0])
+    #else:
+    #	newShapefiles = shapes
+
+    for tile in TilesList:
+        for im in images:
+	    if tile[1:] in im:
+		if "s1" in im.lower() or "sentinel1" in im.lower():
+		    newS1images.append(im)
+         	if "s2" in im.lower() or "sentinel2" in im.lower():
+		    newS2images.append(im)
+         
+	for sh in shapes:
+	    if tile[1:] in sh:
+		newShapefiles.append(sh)
+
+
+    if len(newShapefiles) != len(TilesList):
+    	for tile in TilesList:
+    	    newShapefiles.append(shapes[0])
+
+    #print newS1images
+    #print newS2images
+
+    # Modify input joborder:
+    if(Qpattern):
+	jo = open(joborder) # Open job order
+	jotext = jo.read()  # Store entire joborder in string
+	jo.close()
+
+	jo = open(joborder) # Re open joborder
+	for line in jo.readlines():
+	    l = line.split(":")
+	    if(l[0] == "RadarImages"):
+		print l[1]
+		jotext = jotext.replace(l[1],"                    %s\n"%(newS1images))
+	    if(l[0] == "OpticalImages"):
+		print l[1]
+		jotext = jotext.replace(l[1],"                  %s\n"%(newS2images))
+	    if(l[0] == "Shapefiles"):
+		jotext = jotext.replace(l[1],"                     %s\n"%(newShapefiles))
+	jo.close()
+	# Save updated joborder
+	jo = open(joborder,"w")
+	jo.write(jotext)
+	jo.close()
+
+    else:
+	     print("*** Warning ***")
+	     print("The names of the files in the WorkFiles directory do not contain enough patters to allow an automatic update of the job order.")
+	     print("The job order file has not been updated.")
+
+
+
+    quit()
+
+	    
 
    # os.system("cp $SENSAGRICHAIN_HOME/bin/scripts/config/template-joborder.cfg %s"%(workdir))
    # #os.system("cp $SENSAGRICHAIN_HOME/bin/scripts/config/template-results.cfg %s"%(workdir))
@@ -958,7 +1037,7 @@ if __name__ == "__main__":
  
     if args.workdir==None and args.config==None and args.results==None and args.update==None and args.execute==None:
         # Handle help message because mutual exclusive option required it.
-        print "usage: sensagrichain [-h] [-w WORKDIR] [-u] [-r] config [-x] job.sh"
+        print "usage: sensagrichain [-h] [-w WORKDIR] [-r] config [-x] [-u] job.sh"
         print "sensagrichain: error: too few arguments"
         quit()
 
@@ -977,7 +1056,6 @@ if __name__ == "__main__":
     if args.execute!=None:
         ExecuteJob(args.execute)
         quit()
-
 
 
     config = ConfigParser.ConfigParser()
@@ -1007,17 +1085,17 @@ if __name__ == "__main__":
     OpticalNbFeatures = {"OPT":10, "OSO":13, "RE":12, "OSORE":15}
 
     try:
-	    srunType = json.loads(config.get("Parameters","ParallelType"))
+	    srunType = json.loads(config.get("Settings","ParallelType"))
     except:
 	    srunType = 1
 
     try:
-	    sruncom = json.loads(config.get("Parameters","ParallelCom"))
+	    sruncom = json.loads(config.get("Settings","ParallelCom"))
     except:
 	    sruncom = "mpirun" # or srun
 
     try:
-	    sysoptions = json.loads(config.get("Parameters","SystemOptions"))
+	    sysoptions = json.loads(config.get("Settings","SystemOptions"))
     except:
 	    sysoptions =  "### No options added ###"
      

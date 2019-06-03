@@ -1,7 +1,7 @@
-# Sensagri Chain
+# Sensagri Classification Chain
 
-The Sensagri Chain for is a that performs supervised classification based on Sentinel-1 and Sentinel-2 time series
-to output a Crop Mask and a Crop Type product vith their respective confidence
+The Sensagri Classification Chain performs supervised classification based on Sentinel-1 and Sentinel-2 time series
+to output a Crop Mask and a Crop Type product vith their respective confidence.
 
 ## Getting Started
 

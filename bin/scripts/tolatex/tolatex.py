@@ -182,14 +182,17 @@ class latexdoc:
 
     # close #
     def close(self):
+        os.system("mkdir -p latex.output")
         self.f.write(self.template[len(self.template) - 1])
         self.f.close()
-        os.system("echo "" >> tolatex.log")
-        os.system("date >> tolatex.log")
+        os.system("echo "" >> latex.output/tolatex.log")
+        os.system("date >> latex.output/tolatex.log")
 	if self.verbose:
-            os.system("pdflatex " + self.outputfile)
+            os.system("pdflatex -output-directory=latex.output " + self.outputfile)
 	else:
-            os.system("pdflatex " + self.outputfile + " >> tolatex.log")
+            os.system("pdflatex -output-directory=latex.output " + self.outputfile + " >> latex.output/tolatex.log")
+        os.system("mv %s latex.output"%(self.outputfile))
+	os.system("mv latex.output/%s .."%(self.outputfile[:-4] + ".pdf"))
 
 ######################################################################"
 

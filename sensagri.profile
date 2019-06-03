@@ -4,6 +4,7 @@
 #    source sensagri.profile                #
 #############################################
 
+echo "*** Sensagri Chain Environment Variables Loaded ***"
 
 export PATH=~/local/bin:$PATH
 export LD_LIBRARY_PATH=~/local/lib:$LD_LIBRARY_PATH
