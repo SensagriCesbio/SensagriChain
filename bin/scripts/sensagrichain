@@ -69,10 +69,11 @@ def CreateWorkDirectory(workdir):
     sensagrihome = os.environ.get('SENSAGRICHAIN_HOME')
     os.system("cp $SENSAGRICHAIN_HOME/bin/scripts/config/template-joborder.cfg %s"%(workdir))
     #os.system("cp $SENSAGRICHAIN_HOME/bin/scripts/config/template-results.cfg %s"%(workdir))
+    here = os.getcwd() 
 
     listvar = {'workdir':workdir,
                'time':"0-01:00:00",
-               'pathworkdir':sensagrihome + "/"+ workdir,
+               'pathworkdir': here + "/"+ workdir,
                'S1_Dates':"S1_Dates.txt",
                'S2_Dates':"S2_Dates.txt",
                'Tiles':"""["tiles1","tiles2"]""",
@@ -106,23 +107,22 @@ def ManageStatistics(workdir,listvar):
 def UpdateJoborder(joborder):
     print "Update Joborder"%(joborder)
     print " NOT IMPLEMENTED YET (12/02/2019) !!!"
-   # os.system("mkdir -p %s"%(workdir))
-   # os.system("mkdir -p %s/WorkFiles/Shapefiles"%(workdir))
-   # os.system("mkdir -p %s/WorkFiles/Images"%(workdir))
+    # Read input joborder:
+
    # os.system("cp $SENSAGRICHAIN_HOME/bin/scripts/config/template-joborder.cfg %s"%(workdir))
    # #os.system("cp $SENSAGRICHAIN_HOME/bin/scripts/config/template-results.cfg %s"%(workdir))
 
    # sensagrihome = os.environ.get('SENSAGRICHAIN_HOME')
-   # listvar = {'workdir':workdir,
-   #            'time':"0-01:00:00",
-   #            'pathworkdir':sensagrihome + "/"+ workdir,
-   #            'S1_Dates':"S1_Dates.txt",
-   #            'S2_Dates':"S2_Dates.txt",
-   #            'Tiles':"""["tiles1","tiles2"]""",
-   #            'S1_Images':"""["S1_Images1.tif","S1_Images2.tif"]""",
-   #            'S2_Images':"""["S2_Images1.tif","S2_Images2.tif"]""",
-   #            'Shapefiles':"""["Shapefile1.shp","Shapefile2.shp"]"""
-   #             }
+    listvar = {'workdir':workdir,
+               'time':"0-01:00:00",
+               'pathworkdir':sensagrihome + "/"+ workdir,
+               'S1_Dates':"S1_Dates.txt",
+               'S2_Dates':"S2_Dates.txt",
+               'Tiles':"""["tiles1","tiles2"]""",
+               'S1_Images':"""["S1_Images1.tif","S1_Images2.tif"]""",
+               'S2_Images':"""["S2_Images1.tif","S2_Images2.tif"]""",
+               'Shapefiles':"""["Shapefile1.shp","Shapefile2.shp"]"""
+                }
 
    # with open("%s/template-joborder.cfg"%(workdir), 'r') as content_file:
    #     content = content_file.read()
@@ -533,12 +533,13 @@ def ExecuteJob(jobfile):
         try:
 		os.system(excom)
                 print "The job %s is running"%(jobfile)
-	        print "To monitor this job, use the commands:"
+	        print "To monitor this job, the following commands can be used:"
 	        print "log %s (for standard output)"%(logfile)
 	        print "dbg %s (for details output)"%(logfile)
 	        print "more %s (for all the output)"%(logfile)
 	except:
 		print "ERROR: Something went wrong with the job %s"%(jobfile)
+		print "       Check if the file exists."
 
 # Header of the SLURM script that is going to be generated accorinding to the joborder setting #
 header = string.Template("""#SBATCH --job-name=$name
@@ -834,33 +835,33 @@ otbcli_ClassificationMapRegularization -io.in $path/tmp/${tile}_${step}${case}${
 """)
 
 CreateProducts = string.Template("""
-# ${step} ${method} ${tile} RadDate=${date1} OptDate=${date2} #
-printlog "${step} ${method} ${tile} RadDate=${date1} OptDate=${date2}"
+# ${step} ${method} ${tile} RadDate=${tag1} OptDate=${tag2} #
+printlog "${step} ${method} ${tile} RadDate=${tag1} OptDate=${tag2}"
 ${srunstart}$$SENSAGRICHAIN_HOME/bin/cpp/Executables/FusionProducts $path/tmp/${tile}_${step1}_probabilities_${tag1}.tif $path/tmp/${tile}_${step2}${method}_probabilities_${tag2}.tif ${classdir}Classes.txt ${classdir}Binary.txt $path/tmp/${tile}${method}_ProductsRaw_${tag1}_${tag2}.tif ${srunend}
 """)
 
 ApplyZeros = string.Template("""
-# Apply zeros per tile product ${step} ${method} ${tile} RadDate=${date1} OptDate=${date2} #
-printlog "Apply zero per tile product ${step} ${method} ${tile} RadDate=${date1} OptDate=${date2}"
+# Apply zeros per tile product ${step} ${method} ${tile} RadDate=${tag1} OptDate=${tag2} #
+printlog "Apply zero per tile product ${step} ${method} ${tile} RadDate=${tag1} OptDate=${tag2}"
 ${srunstart}otbcli_BandMathX -il $image $path/tmp/${tile}${method}_ProductsRaw_${tag1}_${tag2}.tif -out $path/Products/${tile}${method}_Products_${tag1}_${tag2}.tif -exp 'im1b1 == 0 || im1b10 == 0 ? 0*im2 : im2' ${srunend}
 """)
 
 CreateMosaic = string.Template("""
-# Create Mosaic ${step} ${method} RadDate=${date1} OptDate=${date2} #
-printlog "Create Mosaic ${step} ${method} RadDate=${date1} OptDate=${date2}"
+# Create Mosaic ${step} ${method} RadDate=${tag1} OptDate=${tag2} #
+printlog "Create Mosaic ${step} ${method}"
 ${srunstart}gdalwarp -srcnodata 0 -dstnodata 0 $ProductsList $srunend
 """)
 
 
 CreateCropMask = string.Template("""
-# ${step} ${method} ${tile} RadDate=${date1} OptDate=${date2} #
-printlog "${step} ${method} ${tile} RadDate=${date1} OptDate=${date2}"
+# ${step} ${method} ${tile} RadDate=${tag1} OptDate=${tag2} #
+printlog "${step} ${method} ${tile} RadDate=${tag1} OptDate=${tag2}"
 $$SENSAGRICHAIN_HOME/bin/cpp/Executables/FusionCropMask $path/tmp/${tile}_${step1}_probabilities_${date1}.tif $path/tmp/${tile}_${step2}${method}_probabilities_${date2}.tif ${classdir}Binary.txt $path/Products/CropMask/${tile}${method}_CropMask_${date1}_${date2}.tif $path/Products/CropMask/${tile}${method}_CropMask_Confidence_${date1}_${date2}.tif
 """)
 
 CreateCropType = string.Template("""
 # ${step} ${method} ${tile} RadDate=${date1} OptDate=${date2} #
-printlog "${step} ${method} ${tile} RadDate=${date1} OptDate=${date2}"
+printlog "${step} ${method} ${tile} RadDate=${tag1} OptDate=${tag2}"
 $$SENSAGRICHAIN_HOME/bin/cpp/Executables/FusionMap $path/tmp/${tile}_${step1}_CROP_probabilities_${date1}.tif $path/tmp/${tile}_${step2}_CROP${method}_probabilities_${date2}.tif ${classdir}Classes_CROP.txt $path/tmp/${tile}${method}_CropTypeNM_${date1}_${date2}.tif $path/tmp/${tile}${method}_CropType_ConfidenceNM_${date1}_${date2}.tif
 """)
 
