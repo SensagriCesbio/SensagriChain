@@ -26,10 +26,14 @@
 !bin/scripts/ComputeBinaryStatistics.py
 !bin/scripts/BinaryStatistics.py
 !bin/scripts/GetShpFileInfo.py
+!bin/scripts/PlotConfusionMatrix.py
+!bin/scripts/Results.py
+
 !bin/scripts/config/template-joborder.cfg
 !bin/scripts/config/template-results.cfg
 !bin/scripts/tolatex/template.tex
 !bin/scripts/tolatex/tolatex.py
+
 !bin/scripts/tolatex/__init__.py
 
 # CHDB

@@ -2,7 +2,7 @@
 #-*- coding: utf-8 -*-
 ######################################
 #          CESBIO 2017-2019          #
-#    Last update: Ludo 30/01/2019    #
+#    Last update: Ludo 06/06/2019    #
 #    Creation:    Ludo 18/12/2018    #
 ######################################
 import sys
@@ -14,16 +14,13 @@ import ConfigParser
 import json
 import numpy as np
 import argparse
+import Results
 import GenerateCommonDates as gcdates
-import PlotStatisticsNew as psn
-import matplotlib.pyplot as plt
-import matplotlib.backends.backend_pdf as mpdf
-import datetime
 from dates import GetDates,GetDatesSentinel
-import tolatex.tolatex as latex
 from time import gmtime, strftime
 
 def cartouche():
+    """ Cartouche """
     text1 = """
 #############################################
 #       SenSAgriChain Classification Chain  #
@@ -47,8 +44,8 @@ def cartouche():
 
 
 
-# Parse configuration file #
 def ConfigSection(section):
+    """ Parse configuration file """
     dic = {}
     Options = Config.option(section)
     for option in Options:
@@ -63,7 +60,8 @@ def ConfigSection(section):
 
 
 def CreateWorkDirectory(workdir):
-    print "Creation of the work directory %s"%(workdir)
+    """ Chain Flag -w : Create Working directory """
+    print "### Creation of the work directory %s ###"%(workdir)
     os.system("mkdir -p %s"%(workdir))
     os.system("mkdir -p %s/WorkFiles/Shapefiles"%(workdir))
     os.system("mkdir -p %s/WorkFiles/Images"%(workdir))
@@ -90,8 +88,17 @@ def CreateWorkDirectory(workdir):
         joborderfile.write(template.substitute(listvar))
         joborderfile.close()
         os.system("rm %s/template-joborder.cfg"%(workdir))
+  
+    print("Fill the %s/WorkFiles/Images/ and %s/WorkFiles/Shapefiles/ directories with relevant files,"%(workdir,workdir))
+    print("""update the "Tiles" parameters in the job order file, then, in the %s directory, run the command:\n"""%(workdir))
+    print("\033[0;32msensagrichain -u joborder.cfg")
+    print("\033[0m") # Reset color #
+    print("to update the joborder file.")
+
+
 
 def ManageStatistics(workdir,listvar):
+    """ chain Flag -r : Deal with outputing statistics """ 
     os.system("mkdir -p %s/Statistics/"%(workdir))
     os.system("cp $SENSAGRICHAIN_HOME/bin/scripts/config/template-results.cfg %s/Statistics/"%(workdir))
 
@@ -103,14 +110,12 @@ def ManageStatistics(workdir,listvar):
         joborderfile.close()
         os.system("rm %s/Statistics/template-results.cfg"%(workdir))
 
-
-
 def UpdateJoborder(joborder):
+    """ Chain Flag -u : Update job order"""
+    # TODO: Add update of date indices from the date file
+ 
     print "*** Updating Joborder %s ***"%(joborder)
-    #print " NOT IMPLEMENTED YET (12/02/2019) !!!"
 
-    # Determine 
-    Qpattern = True
     config = ConfigParser.ConfigParser()
     namecfg = config.read(joborder)
 
@@ -150,9 +155,8 @@ def UpdateJoborder(joborder):
     if len(newShapefiles) != len(TilesList):
     	for tile in TilesList:
     	    newShapefiles.append(shapes[0])
-
-    #print newS1images
-    #print newS2images
+   
+    Qpattern = (len(newS1images) + len(newS2images) + len(newShapefiles) ) > 0
 
     # Modify input joborder:
     if(Qpattern):
@@ -164,10 +168,8 @@ def UpdateJoborder(joborder):
 	for line in jo.readlines():
 	    l = line.split(":")
 	    if(l[0] == "RadarImages"):
-		print l[1]
 		jotext = jotext.replace(l[1],"                    %s\n"%(newS1images))
 	    if(l[0] == "OpticalImages"):
-		print l[1]
 		jotext = jotext.replace(l[1],"                  %s\n"%(newS2images))
 	    if(l[0] == "Shapefiles"):
 		jotext = jotext.replace(l[1],"                     %s\n"%(newShapefiles))
@@ -187,10 +189,6 @@ def UpdateJoborder(joborder):
     quit()
 
 	    
-
-   # os.system("cp $SENSAGRICHAIN_HOME/bin/scripts/config/template-joborder.cfg %s"%(workdir))
-   # #os.system("cp $SENSAGRICHAIN_HOME/bin/scripts/config/template-results.cfg %s"%(workdir))
-
    # sensagrihome = os.environ.get('SENSAGRICHAIN_HOME')
     listvar = {'workdir':workdir,
                'time':"0-01:00:00",
@@ -203,409 +201,8 @@ def UpdateJoborder(joborder):
                'Shapefiles':"""["Shapefile1.shp","Shapefile2.shp"]"""
                 }
 
-   # with open("%s/template-joborder.cfg"%(workdir), 'r') as content_file:
-   #     content = content_file.read()
-   #     template =  string.Template(content)
-   #     joborderfile = open("%s/joborder.cfg"%(workdir),"w") 
-   #     joborderfile.write(template.substitute(listvar))
-   #     joborderfile.close()
-   #     os.system("rm %s/template.cfg"%(workdir))
-
-
-
-def ConstrucDics(workdir,croptype):
-   classfile = workdir + "/WorkFiles/Classes.csv" 
-   #gatherfile = workdir + "/WorkFiles/Classes_Gathered.csv" 
-   binaryfile = workdir + "/WorkFiles/Binary.txt" 
-   colorfile = workdir + "/WorkFiles/Legend.csv" 
-   #outputdir = workdir + "/Statistics/" 
-   outputdir = "" 
- 
-   # Construct Class name dictionary
-   with open(classfile, "r") as ins:
-       classname = {}
-       for line in ins:
-           couple = line.split(":")
-           classname[int(couple[1])] = couple[0]
-       classname[0]="NoCrop"
-   classname[-1] = "OA"
-   classname[-2] = "95 CI"
-      
-  # # Construct Class gathering dictionary 
-  # with open(gatherfile, "r") as ins:
-  #     gatheringSet = {}
-  #     for line in ins:
-  #         couple = line.split(":")
-  #         gatheringSet[int(couple[0])] = int(couple[1])
-  #     gatheringSet[0] = 0
-     
-   # Construct Color dictionary
-   #with open(colorfile, "r") as ins:
-   #    colordic = {0:"#000000"}
-   #    for line in ins:
-   #        couple = line.split(":")
-   #        colordic[int(couple[0])] = couple[1][:-1] # [:-1] to remove the "\n" at the end of the line
-   # # Fix cropmask "mask"
-
-   colordic = {0:0}
-
-   if croptype == 0:
-       cropmask = np.loadtxt(binaryfile)
-       # filtered
-       cropmask = cropmask[:-1].copy()
-   else: cropmask = np.array([1])
-   #return classname,gatheringSet,colordic,cropmask
-   return classname,colordic,cropmask
-
-def ExportResults(fileconf):
-    print "Exporting results plots and tables..."
-    config = ConfigParser.ConfigParser()
-    namecfg = config.read(fileconf)
-
-    title = config.get("Global","Title") 
-    NbRun = int(config.get("Global","NbRun"))
-    outputdir = config.get("Global","OutptDirectory")
-
-    fname = config.get("Global","Name")
-  
-    SectionsList = config.sections()
-    SectionsList.remove("Global")
-
-    CropTypePDF = outputdir + "Plot-RePrCropMask-%s.pdf"%(fname)
-    FscorePDF = outputdir + "Plot-Fscore-AllClasses-%s.pdf"%(fname)
-    FscoreBAR = outputdir + "Bar-Fscore-AllClasses-%s.pdf"%(fname)
-    TablePDF = outputdir + "Table-Fscore-AllClasses-%s"%(fname)
-
-    PrReCM = mpdf.PdfPages(CropTypePDF)
-    pdf = mpdf.PdfPages(FscorePDF)
-    bar = mpdf.PdfPages(FscoreBAR)
-
-    ListBand = []
-    ListName = []
-    ListDates = []
-    ListStyle = []
-    ListStat = []
-    ListValDates = []
-    ListTableDates = []
-    ListQTable = []
-
-    for section in SectionsList:
-      # TODO: Ajouter comme param
-      croptype = 0 #TODO  
-      imperfectCM = False
-      TypeName=["","-CROP","CTAfterCM"]
-      png = 0
-      xl = 0.9 
-      yl = 0.3
-
-      # Load config parameters
-      workdir = config.get(section,"WorkDirectory")
-      datadir = config.get(section,"WorkDirectory")+"/AllTiles/"+config.get(section,"DataDirectory")+"/"
-      RFDir = config.get(section,"ClassifDirectory")
-      band = config.get(section,"Label")
-      name = config.get(section,"Name")
-      DatesFile = workdir + "/WorkFiles/" + config.get(section,"DatesFile")
-      ValDates = json.loads(config.get(section,"ValidationDates"))
-      style = json.loads(config.get(section,"Style"))
-      QTable = config.getboolean(section,"Table")
-      if(QTable):
-        try:
-          TableDates = json.loads(config.get(section,"TableDates"))
-          ListTableDates.append(TableDates)
-        except:
-          print "TableDates parameter need to be provided in section %s"%(section)
-          quit()
-
-      try:
-	      Qnorm = config.getboolean(section,"Normalized")
-      except:
-	      Qnorm = False
-
-
-      # Path and directory settings
-      Dates,DoYlabel = GetDates(DatesFile)
-      NbDates = len(Dates)
-      Dates = np.array(Dates)
-      DoYDic = {}
-      DoYList = []
-      for i,d in enumerate(Dates):
-          DoYDic[d]=DoYlabel[i]
-          DoYList.append(DoYlabel[i])
-       
-      #classname,gatheringSet,colordic,cropmask = ConstrucDics(workdir,croptype)
-      classname,colordic,cropmask = ConstrucDics(workdir,croptype)
-
-
-      # TODO          
-      # Set variables for "Crop type after crop mask"
-      #TypeName=["","-CROP","CTAfterCM"]
-      #if (png==1):os.system("mkdir -p fig")
-
-      PlotTitle =  title + ": All Classes Fscore: "
-      FscorePDF = outputdir + "Plot-Fscore-AllClasses.pdf"
-      FscoreBar = outputdir + "Bar-Fscore-AllClasses.pdf"
-      ConfusionsPDF = outputdir + "Plot-Confusions-AllClasses.pdf"
-
-      # Get all statistic per classification type 
-      Stat = psn.FscoreResults(datadir,RFDir,NbDates,NbRun,band,cropmask,imperfectCM,Qnorm)
-
-      # Fill param list per configuiration section
-      ListBand.append(band)
-      ListName.append(name)
-      ListStyle.append(style)
-      ListValDates.append(ValDates)
-      ListDates.append([NbDates,Dates,DoYDic,DoYList,TableDates])
-      ListStat.append(Stat)
-      ListQTable.append(QTable)
-
-
-      # Get out Number of classe
-      Fscore = Stat.FSmoy
-      NbClasses= len(Fscore[0])
- 
-       
-      # Construction of the Fscore Plots
-      # Loop over classes
-    
-    ND = len(ListTableDates[0])
-    NS = len(ListQTable)
-    tdata=[]
-    bardata=[]
-    errdata=[]
-    ci = 0 
-    cf = NbClasses
-    ClassNameList = []
-
-    print "*** Export Average Fscore evolution ***"
-    for c in range(ci,cf):
-        print "### %s ###"%(classname[int(Fscore[0][c][0])])
-        ClassNameList.append(classname[int(Fscore[0][c][0])])
-        figPlot = plt.figure(figsize=(12,6))
-
-        axPlot = figPlot.add_subplot(111)
-
-        axPlot.grid()
-        #plt.ylim(0, 1)
-
-        axPlot.set_title(PlotTitle + classname[int(Fscore[0][c][0])])
-        cname = classname[int(Fscore[0][c][0])].replace(" ", "_")
-        namepng="fig/%s%s-Fscore-%s.png"%(title,TypeName[croptype],cname)
-        axPlot.set_xlabel('DoY', fontsize = 13)
-        axPlot.set_ylabel('Average F-Score (%)', fontsize = 13)
-
-
-    # ListBand = []
-    # ListName = []
-    # ListDates = []
-    # ListCol = []
-    # ListStat = []
-        ListFS = []
-        ListErr = []
-        line = []
-        for s,section in enumerate(SectionsList):
-          #print "   *** ",ListName[s]," ***"
-          #print "   *** ",ListBand[s]," ***"
-          # Get Statistical variable for all sections 
-          Stat = ListStat[s]
-          fscore = Stat.FSmoy
-          OA = Stat.OAmoy
-          Int = Stat.OAint
-          fsbar = Stat.FSint
-          datesidx = Stat.dates   
-          
-          # Plot variables per sections
-          axPlot.set_title(PlotTitle + classname[int(Fscore[0][c][0])])
-          axPlot.errorbar(ListDates[s][1][datesidx],100.0*fscore[:,c,1],100.0*fsbar[:,c,1],capsize=2,lw=0.5,label = ListName[s], color = ListStyle[s][0], ls = ListStyle[s][1])
-          #axPlot.legend(bbox_to_anchor=(xl, yl),bbox_transform=plt.gcf().transFigure)
-          axPlot.legend()
-          sorteddates = ListDates[s][1][datesidx]
-          DoY = [ListDates[s][2][k] for k in sorteddates]
-          axPlot.set_xticks(sorteddates)
-          axPlot.set_xticklabels(DoY,rotation = 90,fontsize = 10)
-
-          # Get fscore per section at the chosend date to construct table
-          TableDatesIdx = [ListValDates[s].index(i) for i in ListTableDates[s]]
-          fs = 100.0*fscore[TableDatesIdx,c,1]
-          err = 100.0*fsbar[TableDatesIdx,c,1]
-          if(ListQTable[s]):
-		  ListFS.append(fs)
-		  ListErr.append(err)
-
-        #print ListFS
-        # Transpose List of fscore from Section-Date to Date Section
-        line = [classname[int(Fscore[0][c][0])]]
-        barline = []
-        errline = []
-        for i in range(ND): 
-          for Fs in ListFS:
-            #line.append(Fs[i])
-            line.append(Fs[i]/100.0)
-            barline.append(Fs[i])
-          for Err in ListErr:
-            errline.append(Err[i])
-
-        tdata.append(line)
-        bardata.append(barline)
-        errdata.append(errline)
-
-        if(png == 0):
-	  pdf.savefig(figPlot,bbox_inches='tight')
-        #else:plt.savefig(namepng)
-    if(png == 0):
-	    pdf.close()   
-
-     
-########## Table ##############
-
-    print "*** Export Average Fscore table ***"
-    doc = latex.latexdoc(TablePDF)
-    doc.title(title)
-
-    # Construct table format 
-    tf="|l|"
-    for i in range(ND): 
-      dc="|"
-      for j in range(NS):
-        dc=dc+"c|"
-      tf=tf+dc
-    
-    # Construct band header
-    head = ["Class"]
-    multisize = [1]
-    for i in range(ND):
-      multisize.append(len(SectionsList))
-      for s,section in enumerate(SectionsList):
-        if(ListQTable[s]): head.append(section)
-    #print "multisize",multisize
-
-    
-    # Construct Date header
-    mc = [""]
-    for d in ListDates[0][4]:
-      mc.append(ListDates[0][3][d-1])
-
-    #print tdata
-    # Add bold for min/max
-    mark = "Max"
-    for i in range(len(tdata)):
-      line = tdata[i]
-      for d in range(ND):
-	currentline = line[NS*d+1:NS*d+ND+2]
-        if(mark=="Max"):idx = line.index(max(currentline))
-        elif(mark=="Min"):idx = line.index(min(currentline))
-	try:
-		tdata[i][idx] =  "\\bf{%.2f}"%(line[idx])
-	except:
-		pass
-    tdata.insert(0,head)
-    alldata = tdata
-
-    cap = "%s: F-Score averaged over %d random runs"%(title,NbRun)
-    doc.tableau([alldata],tf, multicol = mc, size = multisize,caption = cap + " (%simum are indicated with bold font)."%(mark))
-    doc.close()
-
-
-################# BAR #################"" 
-
-    print "*** Export Average Fscore barplot ***"
-    bardata = np.asarray(bardata)
-    errdata = np.asarray(errdata)
-
-    width = 1.0/float(NS+1)
-    x = np.arange(NbClasses)
-    dt = len(ListDates[0][4])
-    for i,d in enumerate(ListDates[0][4]):
-            figBar  = plt.figure(figsize=(12,6))
-            axBar  = figBar.add_subplot(111)
-
-            axBar.set_ylim(0, 110)
-            axBar.grid()
-            axBar.set_title(PlotTitle)
-            axBar.set_xlabel('Class', fontsize = 13)
-            axBar.set_ylabel('Average F-Score (%)', fontsize = 13)
-	    axBar.set_title(PlotTitle + ListDates[0][3][d-1])
-            for s,section in enumerate(SectionsList):
-		    Stat = ListStat[s]
-	            fscore = Stat.FSmoy
-		    fsbar = Stat.FSint
-		    
-		    fscoreBar = bardata[:,s+i*NS] 
-		    errorBar = errdata[:,s+i*NS]
-		    shift = width*s
-		    axBar.bar(x+shift,fscoreBar,width*0.9,yerr=errorBar,label = ListName[s],color = ListStyle[s][0])
-          	    axBar.set_xticks(range(NbClasses))
-           	    axBar.set_xticklabels(ClassNameList,rotation = 90,fontsize = 10)
-
-            axBar.legend()
-            bar.savefig(figBar,bbox_inches='tight')
-   
-    bar.close()   
-
-################# Crop Mask ################# 
-
-    print "*** Export Crop Mask measures evolution ***"
-    measuresName = {"Re0":"NoCrop Recall","Pr0":"NoCrop Precision","Re1":"Crop Recall","Pr1":"Crop Precision"}
-    measures     = {"Re0":"BinRECmoy","Pr0":"BinPREmoy","Re1":"BinRECmoy","Pr1":"BinPREmoy"}
-    measuresInt  = {"Re0":"BinRECint","Pr0":"BinPREint","Re1":"BinRECint","Pr1":"BinPREint"}
-    iscrop =  {"Re0":0,"Pr0":0,"Re1":1,"Pr1":1}
-
-    meas = {}
-    for meas in ["Re0","Pr0","Re1","Pr1"]:
-	    figCM  = plt.figure(figsize=(12,6))
-            axCM  = figCM.add_subplot(111)
-            #axCM.set_ylim(0, 100)
-            axCM.grid()
-            axCM.set_title(PlotTitle)
-            axCM.set_xlabel('DoY', fontsize = 13)
-            axCM.set_ylabel('Average %s (%%)'%(measuresName[meas]), fontsize = 13)
-            axCM.set_title(PlotTitle + measuresName[meas])
-            for s,section in enumerate(SectionsList):
-                Stat = ListStat[s]
-                datesidx = Stat.dates
-                ##Meas = Stat.BinRECmoy[:,0]
-                Meas = getattr(Stat,measures[meas])[:,iscrop[meas]]
-                IntMeas = getattr(Stat,measuresInt[meas])[:,iscrop[meas]]
-                axCM.errorbar(ListDates[s][1][datesidx],100.0*Meas,100.0*IntMeas,capsize=2,lw=0.5,label = ListName[s], color = ListStyle[s][0], ls = ListStyle[s][1])
-                axCM.legend()
-                sorteddates = ListDates[s][1][datesidx]
-                DoY = [ListDates[s][2][k] for k in sorteddates]
-                axCM.set_xticks(sorteddates)
-                axCM.set_xticklabels(DoY,rotation = 90,fontsize = 10)
-                axCM.legend()
-            PrReCM.savefig(figCM,bbox_inches='tight')
-    PrReCM.close()   
-
-#################### Confusion ##############################
-
-# TODO
-
-
-
-#   for c in range(nc):
-#      line = [cname[c],data1[0][c],data2[0][c],data3[0][c],data1[1][c],data2[1][c],data3[1][c],data1[2][c],data2[2][c],data3[2][c]]
-#      for i in [1,4,7]:
-#          if  (mark=="Max"):idx = line.index(max(line[i:i+3]))
-#          elif(mark=="Min"):idx = line.index(min(line[i:i+3]))
-#          else:
-#              print("mark should be max or min")
-#              quit()
-#          line[idx] = "\\bf{%.2f}"%(line[idx])
-#      if(line[0] != "Forest"): alldata.append(line)
-#
-    
-    
-        
-
-
-
-   # # Get Input Parameters #
-   # p1 = json.loads(config.get('Parameters',"p1"))
-   # p2 = json.loads(config.get('Parameters',"p2"))
-   # print p&
-   # p2
- 
-
 def ExecuteJob(jobfile):
+        """ Chain Flag -x: Manage execution with log files """
 	timetag = datetime.datetime.now().strftime("%y%m%d-%H%M%S")
         logfile = jobfile[:-3] + "-%s.log"%(timetag) 
 	excom = "bash %s > %s 2>&1 &"%(jobfile,logfile)
@@ -619,6 +216,10 @@ def ExecuteJob(jobfile):
 	except:
 		print "ERROR: Something went wrong with the job %s"%(jobfile)
 		print "       Check if the file exists."
+
+##########################################################################################################################
+#                          List of Mapping dictionaires to handle writting in the job script file                        #
+##########################################################################################################################
 
 # Header of the SLURM script that is going to be generated accorinding to the joborder setting #
 header = string.Template("""#SBATCH --job-name=$name
@@ -666,7 +267,6 @@ cp -r $CreationDir0 $CreationDir
 """)
 
 
-
 # CHDB function allows almost embarassing parallelisation over several core per node requested"
 chdbOverFile = string.Template("""
 # $step #
@@ -695,8 +295,6 @@ printlog "$step"
 $srun -n $ntasks chdb --in-type dir --in-dir $indir --command-line "$prog $arg" --report $report
 rm -r $indir.out
 """)
-
-
 
 chdbOverDirCmd = string.Template("""
 # $step #
@@ -828,11 +426,11 @@ printlog "Statistics Optical $method, Radar and Fusion"
 $loop
 do IFS=","
   set -- $$i
-  printdebug "------- OSO + Red Edge:  _OSORE -------: Date $${1} $${2}"
+  printdebug "-------$$method -------: Date $${1} $${2}"
   $srun -n $ntasks chdb --in-type dir --in-dir $root/AllTiles/Optical --command-line "CalculateStatistics ${root}/AllTiles/Radar/%path%/Classifications/Probabilities/Probabilities_Date$${1}.txt Classifications/Probabilities/Probabilities${method}_Date$${2}.txt CropTypeLabels_val.txt ${root}/WorkFiles/Classes.txt ${root}/AllTiles/Fusion/%path%/Classifications/ConfusionsMatrices/ConfusionsMatrix_Fusion${method}_Date$${2}.csv BinaryCropLabels_val.txt ${root}/WorkFiles/Binary.txt ${root}/AllTiles/Radar/%path%/Classifications/ConfusionsMatrices/ConfusionsMatrix_CM_Date$${1}.csv ${root}/AllTiles/Optical/%path%/Classifications/ConfusionsMatrices/ConfusionsMatrix_CM${method}_Date$${2}.csv ${root}/AllTiles/Fusion/%path%/Classifications/ConfusionsMatrices/ConfusionsMatrix_CM_Fusion${method}_Date$${2}.csv"
   rm -r $root/AllTiles/Optical.out
 
-  printdebug "------- OSO + Red Edge:  CROP_OSORE -------: Date $${1} $${2}"
+  printdebug "------- $$method CROP -------: Date $${1} $${2}"
   $srun -n $ntasks chdb --in-type dir --in-dir $root/AllTiles/Optical --command-line "CalculateStatistics ${root}/AllTiles/Radar/%path%/Classifications/Probabilities/Probabilities_CROP_Date$${1}.txt Classifications/Probabilities/Probabilities_CROP${method}_Date$${2}.txt CropTypeLabels_val_CROP.txt ${root}/WorkFiles/Classes_CROP.txt ${root}/AllTiles/Fusion/%path%/Classifications/ConfusionsMatrices/ConfusionsMatrix_CROP_Fusion${method}_Date$${2}.csv"
   rm -r $root/AllTiles/Optical.out
 
@@ -964,71 +562,14 @@ otbcli_BandMath -il $path/Products/CropMask/${tile}${method}_CropMask_${date1}_$
 """)
 
 
-def CalculateTime(Surfaces,NbRadCh,NbOptCh,NbRadDates,NbOptDates,QList):
-    # Time taken per task CALMIP EOS in minutes
-   
-    NbTiles = len(Surfaces)
-
-    TOptExt       = 0  	  # CALCULTE FROM SURFACES 
-    TRadExt       = 0        # CALCULTE FROM SURFACES 
-    TOptSam       = 30       
-    TRadSam       = 30           
-    TOSO          = 60       # TEST
-    TRE           = 60       # TEST
-    TOptCla       = 5*60     # 4h30           
-    TOptCroCla    = 5*60     # 4h30           
-    TRadCla       = 6*60     # 6h00
-    TRadCroCla    = 6*60     # 6h00
-    TOSOCla       = 12*60    # TEST 8h failled  
-    TOSOCroCla    = 12*60    # TEST 8h failled  
-    TRECla        = 12*60    # TEST 8h failled
-    TRECroCla     = 12*60    # TEST 8h failled
-    TRadOptJoi    = 180          
-    TRadOptCla    = 20*60    # 20h00
-    TRadOptCroCla = 20*60    # 20h00
-    TOptMap       = 60*NbTiles
-    TRadMap       = 60*NbTiles
-    TRadOptMap    = 60*NbTiles
-    TOSOMap       = 24*60
-    TREMap        = 24*60
-    TOptReg       = 0        # Take about 10s per tiles. We negglect it
-    TRadReg       = 0        # Take about 10s per tiles. We negglect it
-    TRadOptReg    = 0        # Take about 10s per tiles. We negglect it 
-    TOSOReg       = 0        # Take about 10s per tiles. We negglect it
-    TREReg        = 0        # Take about 10s per tiles. We negglect it
-    TFusion       = 0
-    TFusReg       = 0
-
-    TList = [TOptExt,TRadExt,TOptSam,TRadSam,TOSO,TRE,TOptCla,TOptCroCla,TRadCla,TRadCroCla,                TOSOCla,TOSOCroCla,TRECla,TRECroCla,TRadOptJoi,TRadOptCla,TRadOptCroCla,TOptMap,
-             TRadMap,TRadOptMap,TOSOMap,TREMap,TOptReg,TRadReg,TRadOptReg,TOSOReg,TREReg,
-             TFusion,TFusReg]
-
-    timeint = 0
-    for i in range(len(QList)):
-        timeint = timeint + TList[i]*QList[i]
-
-    s0 = 168269754.0
-    for s in Surfaces:
-        sf = float(s)
-        timeint = timeint + QOptExt*((0.24*(sf/s0)**3 + 0.54*(sf/s0)**2) + QRadExt*(0.18*(sf/s0)**3 + 0.52*(sf/s0)**2) + 2)*60
-
-    m = divmod(timeint,60)[1] 
-    hours = divmod(timeint,60)[0] 
-    h = divmod(hours,24)[1] 
-    d = divmod(hours,24)[0] 
-    time = "%d-%02d:%02d:00"%(d,h,m) 
-    return timeint,time
-
-### MAINS ###################################################################################
+######################################################## MAIN #################################################################
 
 if __name__ == "__main__":
 
-
+    ### Initialise parser ###
     GeneratedCartouche = "#!/bin/bash\n" + cartouche()
     parser=argparse.ArgumentParser()
-    #parser.add_argument('func', nargs='?',default='foo')
     parser.add_argument("config", nargs='?',default = None, help="Set the file CONFIG as the configuration file")
-    #parser.add_argument('--list',action='store_true')
     parser.add_argument("-w", "--workdir", help="Create work directory WORKDIR. If specified, config is not compulsory")
     parser.add_argument("-r", "--results", help="Export statistical results according to configuration file")
     parser.add_argument("-u", "--update", help="Update job order according to files presents in the directory")
@@ -1037,7 +578,7 @@ if __name__ == "__main__":
  
     if args.workdir==None and args.config==None and args.results==None and args.update==None and args.execute==None:
         # Handle help message because mutual exclusive option required it.
-        print "usage: sensagrichain [-h] [-w WORKDIR] [-r] config [-x] [-u] job.sh"
+        print "usage: sensagrichain [-h] [-w WORKDIR] [-r] config [-x] [-u] joborder.sh"
         print "sensagrichain: error: too few arguments"
         quit()
 
@@ -1050,13 +591,12 @@ if __name__ == "__main__":
       quit()
 
     if args.results!=None:
-        ExportResults(args.results)
+        Results.Export(args.results)
         quit()
 
     if args.execute!=None:
         ExecuteJob(args.execute)
         quit()
-
 
     config = ConfigParser.ConfigParser()
     namecfg = config.read(args.config)
@@ -1065,11 +605,8 @@ if __name__ == "__main__":
     
     # Get Input Parameters #
     name = json.loads(config.get('Parameters',"JobName"))
-    reservedtime = json.loads(config.get('Parameters',"ReservedTime"))
     workdir = json.loads(config.get('Parameters',"WorkingDirectory"))
     TilesList = json.loads(config.get('Parameters',"Tiles"))
-    #SurfacesList = json.loads(config.get('Parameters',"Surfaces"))
-    #time = "0-10:00:00"
     RadarImg = json.loads(config.get('Parameters',"RadarImages"))
     OpticalImg = json.loads(config.get('Parameters',"OpticalImages"))
     S1DatesFile = json.loads(config.get('Parameters',"RadarDates"))
@@ -1082,7 +619,34 @@ if __name__ == "__main__":
     NbRun = int(config.get('Parameters','NbRun'))
     NbSamples = int(config.get('Parameters','NbSamples'))
     radius = int(config.get('Parameters','RegularizationRadius'))
+
+
+    # Primitives mappings #
+    stepname = {"OPT":"S2 Optical Band Only",
+	        "OSO":"S2 + OSO Primitives",
+		 "RE":"S2 + Red Edge Primitives",
+  	      "OSORE":"S2 + OSO + Red Edge Primitives"}
+
+    methodname = {"OPT":"",
+	          "OSO":"_OSO",
+		   "RE":"_RE",
+		"OSORE":"_OSORE"}
+
     OpticalNbFeatures = {"OPT":10, "OSO":13, "RE":12, "OSORE":15}
+
+    prim2code = {"OPT":-1,"OSO":0,"RE" :1,"OSORE":2}
+
+
+    # Optional parameters in the joborder configuration file #
+    try:
+	reservedtime = json.loads(config.get('Parameters',"ReservedTime"))
+    except:
+	reservedtime = "00:00:00"
+
+    try:
+	memory = json.loads(config.get('Parameters',"MemoryPerJob"))
+    except:
+	memory = "180GB"
 
     try:
 	    srunType = json.loads(config.get("Settings","ParallelType"))
@@ -1143,7 +707,7 @@ if __name__ == "__main__":
     #RadarImagesList = json.loads(config.get('Paths',"RadarImages"))
     #Shapefiles = json.loads(config.get('Paths',"Shapefiles"))
     
-    TypeList = ["Optical","Radar","OSO","RedEdge","OSORedEdge","RadarOptical","Fusion"]
+    TypeList = ["Optical","Radar","RadarOptical","Fusion"]
     OptionsList = ["Classification","Map","CropClassification","CropMap"]
 
     # General Options
@@ -1159,25 +723,21 @@ if __name__ == "__main__":
     extraOptions = [
                     ["Optical","Extraction"],
                     ["Optical","Sampling"],
+                    ["Optical","Primitives"],
                     ["Radar","Extraction"],
                     ["Radar","Sampling"],
-                    ["OSO","CalculateIndices"],
-                    ["RedEdge","CalculateIndices"],
-                    ["OSORedEdge","CalculateIndices"],
-                    ["RadarOptical","OpticalType"],
                     ["RadarOptical","Join"],
-                    ["Fusion","OpticalType"],
                     ["Fusion","CreateProducts"],
                     ["Fusion","Regularization"]]
 
     for val in extraOptions:
         ty = val[0]
         op = val[1]
-        if op == "OpticalType":
+        if op == "Primitives":
             QOption[ty][op] = json.loads(config.get(ty,op))
         else:
             QOption[ty][op] = config.getboolean(ty,op) 
-   
+
     #QList=[QOptExt,QRadExt,QOptSam,QRadSam,QOSOInd,QREInd,QOptCla,QOptCroCla,QRadCla,
     #       QRadCroCla,QOSOCla,QOSOCroCla,QRECla,QRECroCla,QRadOptJoi,QRadOptCla,
     #       QRadOptCroCla,QOptMap,QRadMap,QRadOptMap,QOSOMap,QREMap,QOptReg,QRadReg,
@@ -1222,7 +782,7 @@ if __name__ == "__main__":
  
 
     NbRadFeatures = 2
-    NbOptFeatures = OpticalNbFeatures[QOption["RadarOptical"]["OpticalType"]]
+    NbOptFeatures = OpticalNbFeatures[QOption["Optical"]["Primitives"]]
     if(QOption["RadarOptical"]["Join"]):
       gcdates.generate(DatesFilesDir,S1DatesFile,S2DatesFile, NbRadFeatures, NbOptFeatures)      
  
@@ -1235,15 +795,14 @@ if __name__ == "__main__":
     #timeint,time = CalculateTime(SurfacesList,NbRadCh,NbOptCh,NbRadDates,NbOptDates,QList) 
     timeint  = 0
     
-    #print "Reserved time = %dh = %s"%(timeint,reservedtime)
-    print "If queue manager is used, the reserved time = %s"%(reservedtime)
+    #print "If queue manager is used, the reserved time = %s"%(reservedtime)
     
     headerDic = {
     'name':name,
     'nodes':1,
     'ntasks':NbRun+1,
     'ntaskspernode':NbRun+1,
-    'mem':"180G",
+    'mem':memory,
     'time':reservedtime,
     'email':Email,
     'mailtype':EmailType,
@@ -1427,88 +986,38 @@ if __name__ == "__main__":
     'report':"Reports/RadCroSamReport.txt"
     }
     
-    ### Indices #########################################
+    ### Indices Managements #####################################
     
-    OSOIndLearn = {
-    'srun':sruncom,  
-    'ntasks':NbRun+1,
-    'indir': workdir+"/AllTiles/Optical",
-    'step':"Creation OSO Primitives Learning Set ",
-    'prog':"CreateOpticalPrimitives",
-    'arg':"Profiles_learn_%s.txt Profiles_learn_%s_OSO.txt %d %d"%(NbSamples,NbSamples,NbOptDates,0),
-    'report':"Reports/OSOIndReport.txt"
-    }
-       
-    OSOIndVal = {
-    'srun':sruncom,  
-    'ntasks':NbRun+1,
-    'indir': workdir+"/AllTiles/Optical",
-    'step':"Creation OSO Primitives Validation Set ",
-    'prog':"CreateOpticalPrimitives",
-    'arg':"Profiles_val.txt Profiles_val_OSO.txt %d %d"%(NbOptDates,0),
-    'report':"Reports/OSOIndReport.txt"
-    }
+    prim = QOption["Optical"]["Primitives"]
+    primCode = prim2code[prim]
+    if(prim != "OPT"):
+        IndLearn = {
+        'srun':sruncom,  
+        'ntasks':NbRun+1,
+        'indir': workdir+"/AllTiles/Optical",
+        'step':"Creation %s Primitives Learning Set "%(prim),
+        'prog':"CreateOpticalPrimitives",
+        'arg':"Profiles_learn_%s.txt Profiles_learn_%s_%s.txt %d %d"%(NbSamples,NbSamples,prim,NbOptDates,primCode),
+        'report':"Reports/IndLearnReport.txt"
+        }
+           
+        IndVal = {
+        'srun':sruncom,  
+        'ntasks':NbRun+1,
+        'indir': workdir+"/AllTiles/Optical",
+        'step':"Creation %s Primitives Validation Set "%(prim),
+        'prog':"CreateOpticalPrimitives",
+        'arg':"Profiles_val.txt Profiles_val_%s.txt %d %d"%(prim,NbOptDates,primCode),
+        'report':"Reports/IndValReport.txt"
+        }
     
-    REIndLearn = {
-    'srun':sruncom,  
-    'ntasks':NbRun+1,
-    'indir': workdir+"/AllTiles/Optical",
-    'step':"Creation Red Edge Primitives Learning Set ",
-    'prog':"CreateOpticalPrimitives",
-    'arg':"Profiles_learn_%s.txt Profiles_learn_%s_RE.txt %d %d"%(NbSamples,NbSamples,NbOptDates,1),
-    'report':"Reports/REIndReport.txt"
-    }
-       
-    REIndVal = {
-    'srun':sruncom,  
-    'ntasks':NbRun+1,
-    'indir': workdir+"/AllTiles/Optical",
-    'step':"Creation Red Edge Primitives Validation Set ",
-    'prog':"CreateOpticalPrimitives",
-    'arg':"Profiles_val.txt Profiles_val_RE.txt %d %d"%(NbOptDates,1),
-    'report':"Reports/REIndReport.txt"
-    }
 
-    OSOREIndLearn = {
-    'srun':sruncom,  
-    'ntasks':NbRun+1,
-    'indir': workdir+"/AllTiles/Optical",
-    'step':"Creation OSO + Red Edge Primitives Learning Set ",
-    'prog':"CreateOpticalPrimitives",
-    'arg':"Profiles_learn_%s.txt Profiles_learn_%s_OSORE.txt %d %d"%(NbSamples,NbSamples,NbOptDates,2),
-    'report':"Reports/OSOREIndReport.txt"
-    }
-       
-    OSOREIndVal = {
-    'srun':sruncom,  
-    'ntasks':NbRun+1,
-    'indir': workdir+"/AllTiles/Optical",
-    'step':"Creation OSO + Red Edge Primitives Validation Set ",
-    'prog':"CreateOpticalPrimitives",
-    'arg':"Profiles_val.txt Profiles_val_OSORE.txt %d %d"%(NbOptDates,2),
-    'report':"Reports/OSOREIndReport.txt"
-    }
-     
-
- 
-    OSOCroIndLearn = OSOIndLearn.copy()
-    OSOCroIndVal   = OSOIndVal.copy()
-    RECroIndLearn  = REIndLearn.copy()
-    RECroIndVal    = REIndVal.copy()
-    OSORECroIndLearn = OSOREIndLearn.copy()
-    OSORECroIndVal   = OSOREIndVal.copy()
-    OSOCroIndLearn['arg'] = "Profiles_learn_CROP_%s.txt Profiles_learn_CROP_%s_OSO.txt %d %d"%(NbSamples,NbSamples,NbOptDates,0)
-    OSOCroIndVal['arg']   =  "Profiles_val_CROP.txt Profiles_val_CROP_OSO.txt %d %d"%(NbOptDates,0)
-    RECroIndLearn['arg']  = "Profiles_learn_CROP_%s.txt Profiles_learn_CROP_%s_RE.txt %d %d"%(NbSamples,NbSamples,NbOptDates,1)
-    RECroIndVal['arg']    = "Profiles_val_CROP.txt Profiles_val_CROP_RE.txt %d %d"%(NbOptDates,1)
-    OSORECroIndLearn['arg'] = "Profiles_learn_CROP_%s.txt Profiles_learn_CROP_%s_OSORE.txt %d %d"%(NbSamples,NbSamples,NbOptDates,2)
-    OSORECroIndVal['arg']   =  "Profiles_val_CROP.txt Profiles_val_CROP_OSORE.txt %d %d"%(NbOptDates,2)
-    OSOCroIndLearn['step'] = OSOCroIndLearn['step'] + "CROP"
-    OSOCroIndVal['step']   = OSOCroIndVal['step'] + "CROP"
-    RECroIndLearn['step']  = RECroIndLearn['step'] + "CROP"
-    RECroIndVal['step']    = RECroIndVal['step'] + "CROP"
-    OSORECroIndLearn['step'] = OSORECroIndLearn['step'] + "CROP"
-    OSORECroIndVal['step']   = OSORECroIndVal['step'] + "CROP"
+        CroIndLearn = IndLearn.copy()
+        CroIndVal   = IndVal.copy()
+        CroIndLearn['arg'] = "Profiles_learn_CROP_%s.txt Profiles_learn_CROP_%s_%s.txt %d %d"%(NbSamples,NbSamples,prim,NbOptDates,primCode)
+        CroIndVal['arg']   =  "Profiles_val_CROP.txt Profiles_val_CROP_%s.txt %d %d"%(prim,NbOptDates,primCode)
+        CroIndLearn['step'] = CroIndLearn['step'] + "CROP"
+        CroIndVal['step']   = CroIndVal['step'] + "CROP"
 
     ### Classifications ########################################
 
@@ -1527,19 +1036,22 @@ if __name__ == "__main__":
     loopRadOpt = "for i in"
     for (dr,do) in zip(ProdRadDatesList,ProdOptDatesList):
       loopRadOpt = loopRadOpt + " %i"%(int(dr)+int(do))
- 
+
+  
+    #TODO: Automitize Optical and radar step number value
     OpticalStep = 5
     RadarStep = 10
+
     OptCla = {
     'srun':sruncom,  
     'ntasks':NbRun+1,
     'NbSamples':NbSamples,
     'indir':"AllTiles/Optical",
-    'step':"Optical",
+    'step':stepname[prim],
     'case':"",
-    'method':"",
+    'method':methodname[prim],
     'dateslist':loopOpt,
-    'NbChannels':10,
+    'NbChannels':OpticalNbFeatures[prim],
     'nomen':workdir + "/WorkFiles/Classes",
     }
    
@@ -1556,88 +1068,49 @@ if __name__ == "__main__":
     'nomen':workdir + "/WorkFiles/Classes",
     }
     
-    OSOCla = {
-    'srun':sruncom,  
-    'ntasks':(NbRun/2)+1,
-    'NbSamples':NbSamples,
-    'indir':"AllTiles/Optical",
-    'step':"OSO",
-    'case':"",
-    'method':"_OSO",
-    'dateslist':loopOpt,
-    'NbChannels':13,
-    'nomen':workdir + "/WorkFiles/Classes",
-    }
-    
-    RECla ={
-    'srun':sruncom,  
-    'ntasks':(NbRun/2)+1,
-    'NbSamples':NbSamples,
-    'indir':"AllTiles/Optical",
-    'step':"Red Edge",
-    'case':"",
-    'method':"_RE",
-    'dateslist':loopOpt,
-    'NbChannels':12,
-    'nomen':workdir + "/WorkFiles/Classes",
-    }
-
-    OSORECla ={
-    'srun':sruncom,  
-    'ntasks':(NbRun/2)+1,
-    'NbSamples':NbSamples,
-    'indir':"AllTiles/Optical",
-    'step':"OSO + Red Edge",
-    'case':"",
-    'method':"_OSORE",
-    'dateslist':loopOpt,
-    'NbChannels':15,
-    'nomen':workdir + "/WorkFiles/Classes",
-    }
-
  
     JoinDic = {
     'srun':sruncom,  
     'ntasks':(NbRun/2)+1,
     'NbSamples':NbSamples,
     'path': workdir,
-    'step':QOption["RadarOptical"]["OpticalType"],
+    'step':stepname[prim],
     'NbRad':NbRadFeatures,
     'NbOpt':NbOptFeatures,
     'case':"",
-    'method': "_" + QOption["RadarOptical"]["OpticalType"],
+    'method': methodname[prim],
     'nomen':workdir + "/WorkFiles/Classes",
     }
 
     ClaRadOpt = {
     'srun':sruncom,  
     'step':"Radar + Optical Classification",
-    'ntasks':NbRun/2+1,
+    'ntasks':(NbRun/2)+1,
     'NbSamples':NbSamples,
     'path': workdir,
     'case':"", 
-    'method':"_" + QOption["RadarOptical"]["OpticalType"], 
-    'name':"S2AGRI", 
+    'method':methodname[prim], 
+    'name':prim, 
     'loop':loopRadOpt
     }
 
     CropClaRadOpt = {
     'srun':sruncom,  
     'step':"Radar + Optical Classification - CROP",
-    'ntasks':NbRun/2+1,
+    'ntasks':(NbRun/2)+1,
     'path': workdir+"/AllTiles",
     'NbSamples':NbSamples,
     'path': workdir,
     'case':"_CROP", 
-    'method':"_" + QOption["RadarOptical"]["OpticalType"], 
-    'name':"S2AGRI", 
+    'method':methodname[prim], 
+    'name':prim, 
     'loop':loopRadOpt
     }
    
-    Stat = {
+    StatDic = {
     'srun':sruncom,  
     'ntasks':NbRun+1,
-    'method': "_" + QOption["Fusion"]["OpticalType"], 
+    'method':methodname[prim], 
     'root': workdir,
     'loop':loopRadOptFus
     }
@@ -1666,16 +1139,18 @@ if __name__ == "__main__":
     ProReg = {}
     AppCM = {}
     for tile in TilesList:
+        #Note: PrimitivesType = (primCode+1) because primitive code is different between the indces creation code and the map code.
+        # Can be change latter
         OptMap[tile] = {
         'srun':sruncom,  
         'ntasks':NbRun+1,
-        'step':"Optical",
+        'step':stepname[prim],
         'case':"",
         'method':"",
         'path': workdir,
         'tile':tile,
         'date':NbOptDates,
-        'PrimitivesType':0,
+        'PrimitivesType':primCode+1,
         'image':workdir + "/WorkFiles/Images/" + OpticalImages[tile],
         'nomen':workdir + "/WorkFiles/Classes",
         }
@@ -1700,7 +1175,7 @@ if __name__ == "__main__":
         'step1':"Radar",
         'step2':"Optical",
         'case':"",
-        'method': "_" + QOption["Fusion"]["OpticalType"], 
+	'method':methodname[prim], 
         'path': workdir,
         'tile':tile,
         'date1':0,
@@ -1715,7 +1190,7 @@ if __name__ == "__main__":
         'step':"Create Fusion Products",
         'step1':"Radar",
         'step2':"Optical",
-        'method':"_" +  QOption["Fusion"]["OpticalType"], 
+        'method':methodname[prim], 
         'image':workdir + "/WorkFiles/Images/" + OpticalImages[tile],
         'path': workdir,
         'tile':tile,
@@ -1731,7 +1206,7 @@ if __name__ == "__main__":
         'step':"Create Crop Mask",
         'step1':"Radar",
         'step2':"Optical",
-        'method':"_" +  QOption["Fusion"]["OpticalType"], 
+	'method':methodname[prim], 
         'path': workdir,
         'tile':tile,
         'date1':0,
@@ -1744,7 +1219,7 @@ if __name__ == "__main__":
         'step':"Create Crop Type",
         'step1':"Radar",
         'step2':"Optical",
-        'method':"_" +  QOption["Fusion"]["OpticalType"], 
+	'method':methodname[prim], 
         'path': workdir,
         'tile':tile,
         'date1':0,
@@ -1755,7 +1230,7 @@ if __name__ == "__main__":
         ProReg[tile] = {
         'ntasks':NbRun+1,
         'step':"Regularization",
-        'method':"_" +  QOption["Fusion"]["OpticalType"], 
+	'method':methodname[prim], 
         'path': workdir,
         'tile':tile,
         'product':"CropMask",
@@ -1768,7 +1243,7 @@ if __name__ == "__main__":
         AppCM[tile] = {
         'ntasks':NbRun+1,
         'step':"Apply Crop Mask",
-        'method':"_" +  QOption["Fusion"]["OpticalType"], 
+	'method':methodname[prim], 
         'path': workdir,
         'tile':tile,
         'date1':0,
@@ -1782,7 +1257,7 @@ if __name__ == "__main__":
     'srunend':srunend, 
     'ntasks':NbRun+1,
     'step':"Create Mosaic Products",
-    'method':"_" +  QOption["Fusion"]["OpticalType"], 
+    'method':methodname[prim], 
     'path': workdir,
     'ProductList':"",
     'date1':0,
@@ -1792,9 +1267,10 @@ if __name__ == "__main__":
     'classdir':workdir+"/WorkFiles/"
     }
     
-    # Python Part
-    
-    # SLURM bash part
+##########################################################################################################################
+#                                            Automatic writting of the job script file                                   #
+##########################################################################################################################
+
 
     tiledic = {'workdir':workdir}
     scriptfile = open(name+".sh","w") 
@@ -1833,93 +1309,59 @@ if __name__ == "__main__":
         scriptfile.write(chdbOverDir.substitute(RadCroVal))
         scriptfile.write(chdbOverDir.substitute(RadSam))
         scriptfile.write(chdbOverDir.substitute(RadCroSam))
-     
-    if(QOption["OSO"]["CalculateIndices"]):
-        scriptfile.write(chdbOverDir.substitute(OSOIndLearn))
-        scriptfile.write(chdbOverDir.substitute(OSOIndVal))
-        scriptfile.write(chdbOverDir.substitute(OSOCroIndLearn))
-        scriptfile.write(chdbOverDir.substitute(OSOCroIndVal))
  
-    if(QOption["RedEdge"]["CalculateIndices"]):
-        scriptfile.write(chdbOverDir.substitute(REIndLearn))
-        scriptfile.write(chdbOverDir.substitute(REIndVal))
-        scriptfile.write(chdbOverDir.substitute(RECroIndLearn))
-        scriptfile.write(chdbOverDir.substitute(RECroIndVal))
-
-    if(QOption["OSORedEdge"]["CalculateIndices"]):
-        scriptfile.write(chdbOverDir.substitute(OSOREIndLearn))
-        scriptfile.write(chdbOverDir.substitute(OSOREIndVal))
-        scriptfile.write(chdbOverDir.substitute(OSORECroIndLearn))
-        scriptfile.write(chdbOverDir.substitute(OSORECroIndVal))
-
+    if(QOption["Optical"]["Primitives"]):
+        scriptfile.write(chdbOverDir.substitute(IndLearn))
+        scriptfile.write(chdbOverDir.substitute(IndVal))
+        scriptfile.write(chdbOverDir.substitute(CroIndLearn))
+        scriptfile.write(chdbOverDir.substitute(CroIndVal))
+ 
 
     # Create Classification directoires #
     scriptfile.write(CreateClassificationDir)
 
+    # Optical Classification #
     if(QOption["Optical"]["Classification"]):
         scriptfile.write(chdbClassif.substitute(OptCla))
     if(QOption["Optical"]["CropClassification"]):
         OptCla['case'] = "_CROP"
         scriptfile.write(chdbClassif.substitute(OptCla))
     
+    # Radar Classification #
     if(QOption["Radar"]["Classification"]):
         scriptfile.write(chdbClassif.substitute(RadCla))
     if(QOption["Radar"]["CropClassification"]):
         RadCla['case'] = "_CROP"
         scriptfile.write(chdbClassif.substitute(RadCla))
     
-    if(QOption["OSO"]["Classification"]):
-        scriptfile.write(chdbClassif.substitute(OSOCla))
-    if(QOption["OSO"]["CropClassification"]):
-        OSOCla['case'] = "_CROP"
-        scriptfile.write(chdbClassif.substitute(OSOCla))
-
-    if(QOption["RedEdge"]["Classification"]):
-        scriptfile.write(chdbClassif.substitute(RECla))
-    if(QOption["RedEdge"]["Classification"]):
-        RECla['case'] = "_CROP"
-        scriptfile.write(chdbClassif.substitute(RECla))
-
-    if(QOption["OSORedEdge"]["Classification"]):
-        scriptfile.write(chdbClassif.substitute(OSORECla))
-    if(QOption["OSORedEdge"]["CropClassification"]):
-        OSORECla['case'] = "_CROP"
-        scriptfile.write(chdbClassif.substitute(OSORECla))
-
-    # STAT #
-    #if(QOption["OSORedEdge"]["Classification"] and
-    #   QOption["OSORedEdge"]["CropClassification"] and
-    #   QOption["Radar"]["Classification"] and
-    #   QOption["Radar"]["CropClassification"]):
-    #   scriptfile.write(chdbLoopStatistics.substitute(Stat))
-
-    if(QOption["OSORedEdge"]["Classification"] and QOption["Radar"]["Classification"]):
-       scriptfile.write(chdbLoopStatistics.substitute(Stat))
+    # Calculation Fusion Classification measures #
+    if(QOption["Optical"]["Classification"] and QOption["Radar"]["Classification"]):
+       scriptfile.write(chdbLoopStatistics.substitute(StatDic))
  
-
+    # Joined Optical and Radar classification # 
     if(QOption["RadarOptical"]["Join"]): scriptfile.write(CreateJoinDir.substitute(JoinDic))
     if(QOption["RadarOptical"]["Classification"]): scriptfile.write(chdbLoopClassifMulti.substitute(ClaRadOpt))
     if(QOption["RadarOptical"]["CropClassification"]): scriptfile.write(chdbLoopClassifMulti.substitute(CropClaRadOpt))
 
-
-    # Classification mix
-    try:
-
-            # Validation with other model
-	    OSORECla["modelid"]   = "_" + json.loads(config.get("Mix","ModelId"))
+    # Classification mix. #
+    #TODO: HARD CODDED VERSION SO FAR #
+    if(False):
+	try:
+	    # Validation with other model
+	    OptCla["modelid"]   = "_" + json.loads(config.get("Mix","ModelId"))
 	    usemodelpath = json.loads(config.get("Mix","ModelTemplate"))
-	    OSORECla["usemodel"] = usemodelpath
+	    OptCla["usemodel"] = usemodelpath
 
-            scriptfile.write(chdbClassifMixModel.substitute(OSORECla))
+            scriptfile.write(chdbClassifMixModel.substitute(OptCla))
                  
             # Calculation of Indices for the whole training set
-            OSOREIndLearn['arg'] = "Profiles_learn.txt Profiles_learn_OSORE.txt %d %d"%(NbOptDates,2)
-            scriptfile.write(chdbOverDir.substitute(OSOREIndLearn))
+            IndLearn['arg'] = "Profiles_learn.txt Profiles_learn_%s.txt %d %d"%(prim,NbOptDates,code2prim)
+            scriptfile.write(chdbOverDir.substitute(IndLearn))
         
             # Apply other model to whole training set
-            OSORECla['dateslist'] = ValDatesOpt[-1] # Just the last date
-	    OSORECla["appid"]    = "_" + json.loads(config.get("Mix","ApplyId"))
-            scriptfile.write(chdbClassifMixApply.substitute(OSORECla))
+            OptCla['dateslist'] = ValDatesOpt[-1] # Just the last date
+	    OptCla["appid"]    = "_" + json.loads(config.get("Mix","ApplyId"))
+            scriptfile.write(chdbClassifMixApply.substitute(OptCla))
 
             # Sample the new artificial dataset
             createlinks = {
@@ -1930,10 +1372,10 @@ if __name__ == "__main__":
             'arg':"",
 	    'report':"Reports/CreateLinksReport.txt"
              }
-	    a = OSORECla["appid"]
-            createlinks['arg'] = "CropTypeLabels_pred%s_Dates%d.txt CropTypeLabels_pred%s.txt\n"%(OSORECla["appid"],ValDatesOpt[-1],a)
+	    a = OptCla["appid"]
+            createlinks['arg'] = "CropTypeLabels_pred%s_Dates%d.txt CropTypeLabels_pred%s.txt\n"%(OptCla["appid"],ValDatesOpt[-1],a)
             scriptfile.write(chdbOverDirNormal.substitute(createlinks))
-            createlinks['arg'] = "Profiles_learn%s.txt Profiles_pred%s.txt\n"%(OSORECla["method"],a)
+            createlinks['arg'] = "Profiles_learn%s.txt Profiles_pred%s.txt\n"%(OptCla["method"],a)
             scriptfile.write(chdbOverDirNormal.substitute(createlinks))
             createlinks['arg'] = "BinaryCropLabels_learn.txt BinaryCropLabels_pred%s.txt\n"%(a)
             scriptfile.write(chdbOverDirNormal.substitute(createlinks))
@@ -1945,19 +1387,18 @@ if __name__ == "__main__":
 
 
             # Construct coherent training set #
-             
-            OSORECla['dateslist'] = loopOpt
-            OSORECla['mixid'] = "_clamix"
-	    OSORECla['previous'] = usemodelpath[:usemodelpath.find("%path%")+6]
+            OptCla['dateslist'] = loopOpt
+            OptCla['mixid'] = "_clamix"
+	    OptCla['previous'] = usemodelpath[:usemodelpath.find("%path%")+6]
 
-            scriptfile.write(chdbClassifMixTrain.substitute(OSORECla))
+            scriptfile.write(chdbClassifMixTrain.substitute(OptCla))
  
 	    # Usual Classification with predicted training set
-            OSORECla['dateslist'] = loopOpt
-            OSORECla['mixid'] = "_CropMix"
-            scriptfile.write(chdbClassifMixCla.substitute(OSORECla))
+            OptCla['dateslist'] = loopOpt
+            OptCla['mixid'] = "_CropMix"
+            scriptfile.write(chdbClassifMixCla.substitute(OptCla))
  
-    except:
+        except:
 	    #raise
 	    pass
 
@@ -1991,43 +1432,7 @@ if __name__ == "__main__":
             for tile in TilesList: 
                 RadMap[tile]['case'] = "_CROP"
                 scriptfile.write(CreateMap.substitute(RadMap[tile]))
-        if(QOption["OSO"]["Map"]):
-            for tile in TilesList:
-                OptMap[tile]['case'] = ""
-                OptMap[tile]['PrimitivesType'] = 1
-                OptMap[tile]['method'] = "_OSO"
-                scriptfile.write(CreateMap.substitute(OptMap[tile]))
-        if(QOption["OSO"]["CropMap"]):
-            for tile in TilesList:
-                OptMap[tile]['case'] = "_CROP"
-                OptMap[tile]['PrimitivesType'] = 1
-                OptMap[tile]['method'] = "_OSO"
-                scriptfile.write(CreateMap.substitute(OptMap[tile]))
-        if(QOption["RedEdge"]["Map"]):
-            for tile in TilesList:
-                OptMap[tile]['case'] = ""
-                OptMap[tile]['PrimitivesType'] = 2
-                OptMap[tile]['method'] = "_RE"
-                scriptfile.write(CreateMap.substitute(OptMap[tile]))
-        if(QOption["RedEdge"]["CropMap"]):
-            for tile in TilesList:
-                OptMap[tile]['case'] = "_CROP"
-                OptMap[tile]['PrimitivesType'] = 2
-                OptMap[tile]['method'] = "_RE"
-                scriptfile.write(CreateMap.substitute(OptMap[tile]))
-        if(QOption["OSORedEdge"]["Map"]):
-            for tile in TilesList:
-                OptMap[tile]['case'] = ""
-                OptMap[tile]['PrimitivesType'] = 3
-                OptMap[tile]['method'] = "_OSORE"
-                scriptfile.write(CreateMap.substitute(OptMap[tile]))
-        if(QOption["OSORedEdge"]["CropMap"]):
-            for tile in TilesList:
-                OptMap[tile]['case'] = "_CROP"
-                OptMap[tile]['PrimitivesType'] = 3
-                OptMap[tile]['method'] = "_OSORE"
-                scriptfile.write(CreateMap.substitute(OptMap[tile]))
-
+#    TODO:
 #    Create fusion all class map. Desactivited so far.
 #    for k in range(len(ProdRadDatesList)):
 #        date1 = ProdRadDatesList[k]    
@@ -2095,12 +1500,8 @@ if __name__ == "__main__":
                 scriptfile.write(RegularizeProducts.substitute(ProReg[tile]))
 
 
-         
-
-
     if(QOption["Fusion"]["CreateProducts"] or QOption["Fusion"]["Regularization"]):
         scriptfile.write("\n# Compress Products.\n") 
-        scriptfile.write("""printlog "Job Completed"\n""")
         scriptfile.write("tar zcvf Products.tar.gz Products/\n")
 
     
