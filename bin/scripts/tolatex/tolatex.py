@@ -1,9 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 # tolatex: to construct latex file with python
-# Ludovic 29/06/2017 #
+# Ludo 29/06/2017 #
 import os
 import sys
+import subprocess
 
 class latexdoc:
     """
@@ -187,12 +188,24 @@ class latexdoc:
         self.f.close()
         os.system("echo "" >> latex.output/tolatex.log")
         os.system("date >> latex.output/tolatex.log")
-	if self.verbose:
-            os.system("pdflatex -output-directory=latex.output " + self.outputfile)
-	else:
-            os.system("pdflatex -output-directory=latex.output " + self.outputfile + " >> latex.output/tolatex.log")
-        os.system("mv %s latex.output"%(self.outputfile))
-	os.system("mv latex.output/%s .."%(self.outputfile[:-4] + ".pdf"))
+ 
+        # Open null file #
+        FNULL = open(os.devnull, 'w')
+
+        # Test if pdflatex is installed #
+        rc = subprocess.call(['which', 'pdflatex'],stdout=FNULL, stderr=subprocess.STDOUT)
+        if rc == 0:
+	    if self.verbose:
+		os.system("pdflatex -output-directory=latex.output " + self.outputfile)
+	    else:
+		os.system("pdflatex -output-directory=latex.output " + self.outputfile + " >> latex.output/tolatex.log")
+	    os.system("mv %s latex.output"%(self.outputfile))
+	    os.system("mv latex.output/%s ."%(self.outputfile[:-4] + ".pdf"))
+        else:
+	    print("ERROR: It seems that pdflatex is not installed on your system.")
+	    print("       Cannot export pdf files.")
+	    print("       Please install pdflatex.")
+
 
 ######################################################################"
 

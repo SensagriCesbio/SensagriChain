@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+# Ludo - CesbBIO (2019) #
 import sys
 import os
 import numpy as np
@@ -8,6 +9,7 @@ import datetime
 #from osgeo import ogr
 
 class infolog():
+    """ Really simple and usfull log manager """
     def __init__(self):
       self.level = 'INFO'
       self.listLevels = ["DEBUG","INFO","WARNING","ERROR","FATAL"] 

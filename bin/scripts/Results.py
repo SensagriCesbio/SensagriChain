@@ -2,6 +2,7 @@
 #-*- coding: utf-8 -*-
 ######################################
 #          CESBIO 2017-2019          #
+#       Creation: Ludo 06/06/2019    #
 ######################################
 
 import numpy as np
@@ -176,7 +177,7 @@ def Export(fileconf):
           axPlot.set_title(PlotTitle + classname[int(Fscore[0][c][0])])
           axPlot.errorbar(ListDates[s][1][datesidx],100.0*fscore[:,c,1],100.0*fsbar[:,c,1],capsize=2,lw=0.5,label = ListName[s], color = ListStyle[s][0], ls = ListStyle[s][1])
           #axPlot.legend(bbox_to_anchor=(xl, yl),bbox_transform=plt.gcf().transFigure)
-          axPlot.legend()
+          axPlot.legend(loc=0)
           sorteddates = ListDates[s][1][datesidx]
           DoY = [ListDates[s][2][k] for k in sorteddates]
           axPlot.set_xticks(sorteddates)
@@ -249,18 +250,19 @@ def Export(fileconf):
     for i in range(len(tdata)):
       line = tdata[i]
       for d in range(ND):
-	currentline = line[NS*d+1:NS*d+ND+2]
+	currentline = line[NS*d+1:NS*d+NS+1]
         if(mark=="Max"):idx = line.index(max(currentline))
         elif(mark=="Min"):idx = line.index(min(currentline))
 	try:
 		tdata[i][idx] =  "\\bf{%.2f}"%(line[idx])
 	except:
-		pass
-    tdata.insert(0,head)
+		raise
+    #tdata.insert(0,head)
     alldata = tdata
 
     cap = "%s: F-Score averaged over %d random runs"%(title,NbRun)
-    doc.tableau([alldata],tf, multicol = mc, size = multisize,caption = cap + " (%simum are indicated with bold font)."%(mark))
+    doc.tableau([[head],alldata],tf, multicol = mc, size = multisize,caption = cap + " (%simum are indicated with bold font)."%(mark))
+    doc.write("\\footnotetext{Documents created automatically by the SenSAgri Classification Chain on \\date{\\oldstylenums{\\today}}}")
     doc.close()
 
 

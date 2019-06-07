@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
+
 ######################################
 #          CESBIO 2017-2019          #
 #    Last update: Ludo 06/06/2019    #
 #    Creation:    Ludo 18/12/2018    #
 ######################################
+
 import sys
 import os
 import glob
@@ -258,7 +260,7 @@ mkdir -p Statistics
 createshapefiles = string.Template("""
 printlog "Split Polygons"
 mkdir -p $CreationDir
-SplitPolygonsArea.py $shapefile $NbRun $CreationDir $WorkFiles
+SplitPolygonsArea.py $shapefile $NbRun $CreationDir $WorkFiles $lc $code $crop
 """)
 
 copyshapefiles = string.Template("""
@@ -619,7 +621,9 @@ if __name__ == "__main__":
     NbRun = int(config.get('Parameters','NbRun'))
     NbSamples = int(config.get('Parameters','NbSamples'))
     radius = int(config.get('Parameters','RegularizationRadius'))
-
+    lc = json.loads(config.get('Parameters',"LC"))
+    code = json.loads(config.get('Parameters',"CODE"))
+    crop = json.loads(config.get('Parameters',"CROP"))
 
     # Primitives mappings #
     stepname = {"OPT":"S2 Optical Band Only",
@@ -818,7 +822,10 @@ if __name__ == "__main__":
         'NbRun':NbRun, 
         'CreationDir0':workdir+"/WorkFiles/Shapefiles/SplitArea_%s/"%(TilesList[0]),
         'CreationDir':workdir+"/WorkFiles/Shapefiles/SplitArea_%s/"%(tile),
-        'WorkFiles':workdir+"/WorkFiles/"
+        'WorkFiles':workdir+"/WorkFiles/",
+	'lc':lc,
+	'code':code,
+	'crop':crop
         }
 
     OptExt = {}
