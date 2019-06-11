@@ -31,10 +31,12 @@ def Export(fileconf):
     SectionsList = config.sections()
     SectionsList.remove("Global")
 
-    CropTypePDF = outputdir + "Plot-RePrCropMask-%s.pdf"%(fname)
-    FscorePDF = outputdir + "Plot-Fscore-AllClasses-%s.pdf"%(fname)
-    FscoreBAR = outputdir + "Bar-Fscore-AllClasses-%s.pdf"%(fname)
-    TablePDF = outputdir + "Table-Fscore-AllClasses-%s"%(fname)
+    
+    CropTypePDF   = outputdir + title + "-Plot-RePrCropMask-%s.pdf"%(fname)
+    FscorePDF     = outputdir + title + "-Plot-Fscore-AllClasses-%s.pdf"%(fname)
+    FscoreBAR     = outputdir + title + "-Bar-Fscore-AllClasses-%s.pdf"%(fname)
+    TablePDF      = outputdir + title + "-Table-Fscore-AllClasses-%s"%(fname)
+    ConfusionsPDF = outputdir + title + "-Plot-Confusions-AllClasses-%s-%s.pdf"%(fname,"%s")
 
     PrReCM = mpdf.PdfPages(CropTypePDF)
     pdf = mpdf.PdfPages(FscorePDF)
@@ -102,9 +104,6 @@ def Export(fileconf):
       #if (png==1):os.system("mkdir -p fig")
 
       PlotTitle =  title + ": All Classes Fscore: "
-      FscorePDF = outputdir + "Plot-Fscore-AllClasses.pdf"
-      FscoreBar = outputdir + "Bar-Fscore-AllClasses.pdf"
-      ConfusionsPDF = outputdir + "Plot-Confusions-AllClasses"
 
       # Get all statistic per classification type 
       Stat = psn.FscoreResults(datadir,RFDir,NbDates,NbRun,band,cropmask,imperfectCM,Qnorm)
@@ -293,7 +292,7 @@ def Export(fileconf):
 		    fscoreBar = bardata[:,s+i*NS] 
 		    errorBar = errdata[:,s+i*NS]
 		    shift = width*s
-		    axBar.bar(x+shift,fscoreBar,width*0.9,yerr=errorBar,label = ListName[s],color = ListStyle[s][0])
+		    axBar.bar(x+shift,fscoreBar,width*0.9,yerr=errorBar,label = ListName[s],color = ListStyle[s][0], ecolor = "k")
           	    axBar.set_xticks(range(NbClasses))
            	    axBar.set_xticklabels(ClassNameList,rotation = 90,fontsize = 10)
 

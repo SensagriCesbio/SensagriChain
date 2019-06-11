@@ -209,6 +209,15 @@ class QualityMesureStruct(object):
 		self.Rec =  Rec
 		self.Fs =  Fs
 
+class QualityMesureStructCM(object):
+	def __init__(self, OA, Kappa, Pre, Rec, Fs, CM):
+		self.OA = OA
+		self.Kappa = Kappa
+		self.Pre = Pre
+		self.Rec =  Rec
+		self.Fs =  Fs
+		self.CM =  CM
+
 #cMatrix is the path of the confusion matrix
 def genCoeff(cMatrix,normalized=False):
 	[AllClass,AllClass_prod] = getAllClass(cMatrix)
@@ -242,7 +251,7 @@ def genCoeff(cMatrix,normalized=False):
 	Rec = computeRecByClass(mat_sort,AllClass)
 	FS = computeFsByClass(Pre,Rec,AllClass)
 
-	return QualityMesureStruct(overallAccuracy,Kappa, Pre, Rec, FS)
+	return QualityMesureStructCM(overallAccuracy,Kappa, Pre, Rec, FS, mat_sort)
 
 def genCoeffDirect(mat_sort,AllClass):
 	nbrGood = mat_sort.trace()
@@ -691,7 +700,7 @@ def FscoreResults(directory,RFDir,NbDates,Nbtirages,btype,cropmask,impCM,normali
               conf.append(mat)
           else:
               measure = genCoeff(chemin,normalized)
-              conf.append(np.loadtxt(chemin,delimiter =',' ,comments='#'))
+              conf.append(measure.CM)
           OA.append(measure.OA)
           FS.append(measure.Fs)
           Pre.append(measure.Pre)
@@ -1126,7 +1135,8 @@ def printline(l):
       print l.transpose()[1][i],"\t",
    print
 
-def GetParcellCount(shapeFile):
+def GetParcellCount(shapeFile,code):
+    # In general code = "CODE"
     driver = ogr.GetDriverByName("ESRI Shapefile")
     dataSource = driver.Open(shapeFile, 0)
     layer = dataSource.GetLayer()
@@ -1134,7 +1144,7 @@ def GetParcellCount(shapeFile):
     classes = []
     ParcelleNbr = []
     for feature in layer:
-        idCode = int(feature.GetField("CODE"))
+        idCode = int(feature.GetField(code))
         if idCode not in classes:
             classes.append(idCode)
             ParcelleNbr.append(1)

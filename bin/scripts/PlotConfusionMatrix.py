@@ -1,5 +1,6 @@
 #!/usr/bin/python
-# Ludo 06/06/2019
+# Update        - 07/06/2019
+# Ludo - CesBIO - 06/06/2019
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
@@ -10,7 +11,7 @@ import matplotlib.backends.backend_pdf as mpdf
 def PlotCM(matList,OAList,IntList,RecList,PreList,FSList,datesList,classnames,filepdf,title,method):
     # Colormap
     cmap = 'rainbow'
-    filename = "%s-%s.pdf"%(filepdf,method)
+    filename = filepdf%(method)
     pdfplot = mpdf.PdfPages(filename)
  
     for k,mat in enumerate(matList):
@@ -28,7 +29,7 @@ def PlotCM(matList,OAList,IntList,RecList,PreList,FSList,datesList,classnames,fi
         FS = FS.reshape(1,-1).T
 
         # Initialize plot
-	plottitle = "%s - Average Confusion Matrix - %s - %s"%(title,method,date)
+	plottitle = "%s - Averages Confusion Matrix - %s - %s"%(title,method,date)
         fig = plt.figure(figsize=(20,15))
         fig.suptitle(plottitle, size = 24) 
         grid = plt.GridSpec(2, 3,width_ratios=[3, 1, 1], height_ratios=[3, 1])
@@ -90,20 +91,30 @@ def PlotCM(matList,OAList,IntList,RecList,PreList,FSList,datesList,classnames,fi
         extentMat = [0,len(mat[0]),len(mat[0]),0]
         extentCol = [0,1,len(mat[0]),0]
         extentRow = [0,len(mat[0]),1,0]
-        
+
+	#MinVal = np.max(np.sum(mat,axis = 1))
+	MinVal = np.min(mat[np.nonzero(mat)])
+	MaxVal = np.max(np.sum(mat,axis = 1))
+
         for i in range(Nmat):
           for j in range(Nmat):
             #ax1.text(i+0.5,j+0.5,"%.1E"%(mat[i,j]), color='black', ha='center', va='center', rotation=45, size = 5)
             val = mat[j,i]
-            if val < 10000:
+	    if (val != 0):
+		e = int(np.floor(np.log10(abs(val))))
+		m = val/10**e
+  	    else:
+		e = 0
+ 
+            if( (-1 < e) and (e < 4) ):
               fval = "%d"%(val)
+	    elif (e<0):
+              fval = "%.fe%d"%(m,e)
             else:
-              e = int(np.floor(np.log10(abs(val))))
-              m = val/10**e 
               fval = "%.1fe%d"%(m,e)
-        
             ax1.text(i+0.5,j+0.5,fval, color='black', ha='center', va='center', rotation=45, size = 11)
-        pl1 = ax1.imshow(mat, extent = extentMat, interpolation='none', aspect='equal',cmap = cmap, norm=LogNorm(vmin=0.1, vmax=5000000))
+
+        pl1 = ax1.imshow(mat, extent = extentMat, interpolation='none', aspect='equal',cmap = cmap, norm=LogNorm(vmin=MinVal, vmax=MaxVal))
         
         for i in range(Nmat):
           for j in range(Nmat):
