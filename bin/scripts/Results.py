@@ -5,6 +5,7 @@
 #       Creation: Ludo 06/06/2019    #
 ######################################
 
+import os
 import numpy as np
 import ConfigParser
 import json
@@ -16,20 +17,29 @@ import PlotStatisticsNew as psn
 import PlotConfusionMatrix as pcm
 import tolatex.tolatex as latex
 
+def printError():
+    print("\033[0;31mERROR:")
+    os.system("tput init") # Reset color
+
 def Export(fileconf):
     """ Export Statistical Results """
     print "Exporting results plots and tables..."
     config = ConfigParser.ConfigParser()
     namecfg = config.read(fileconf)
 
-    title = config.get("Global","Title") 
-    NbRun = int(config.get("Global","NbRun"))
-    outputdir = config.get("Global","OutptDirectory")
-
-    fname = config.get("Global","Name")
-  
-    SectionsList = config.sections()
-    SectionsList.remove("Global")
+    try:
+        title = config.get("Global","Title") 
+        NbRun = int(config.get("Global","NbRun"))
+        outputdir = config.get("Global","OutptDirectory")
+    
+        fname = config.get("Global","Name")
+      
+        SectionsList = config.sections()
+        SectionsList.remove("Global")
+    except:
+        printError()
+	print "It seems that the results configuration file does not exist or that its structure is incorrect. Please check."
+	quit()
 
     
     CropTypePDF   = outputdir + title + "-Plot-RePrCropMask-%s.pdf"%(fname)

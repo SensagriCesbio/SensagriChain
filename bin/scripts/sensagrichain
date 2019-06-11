@@ -21,6 +21,11 @@ import GenerateCommonDates as gcdates
 from dates import GetDates,GetDatesSentinel
 from time import gmtime, strftime
 
+def printError():
+    print("\033[0;31mERROR:")
+    os.system("tput init") # Reset color
+
+
 def cartouche():
     """ Cartouche """
     text1 = """
@@ -94,7 +99,7 @@ def CreateWorkDirectory(workdir):
     print("Fill the %s/WorkFiles/Images/ and %s/WorkFiles/Shapefiles/ directories with relevant files,"%(workdir,workdir))
     print("""update the "Tiles" parameters in the job order file, then, in the %s directory, run the command:\n"""%(workdir))
     print("\033[0;32msensagrichain -u joborder.cfg")
-    print("\033[0m") # Reset color #
+    os.system("tput init") # Reset color
     print("to update the joborder file.")
 
 
@@ -216,7 +221,8 @@ def ExecuteJob(jobfile):
 	        print "dbg %s (for details output)"%(logfile)
 	        print "more %s (for all the output)"%(logfile)
 	except:
-		print "ERROR: Something went wrong with the job %s"%(jobfile)
+	        printError()
+		print "Something went wrong with the job %s"%(jobfile)
 		print "       Check if the file exists."
 
 ##########################################################################################################################
@@ -606,25 +612,29 @@ if __name__ == "__main__":
     ### Parse paramters for joborder files ###
     
     # Get Input Parameters #
-    name = json.loads(config.get('Parameters',"JobName"))
-    workdir = json.loads(config.get('Parameters',"WorkingDirectory"))
-    TilesList = json.loads(config.get('Parameters',"Tiles"))
-    RadarImg = json.loads(config.get('Parameters',"RadarImages"))
-    OpticalImg = json.loads(config.get('Parameters',"OpticalImages"))
-    S1DatesFile = json.loads(config.get('Parameters',"RadarDates"))
-    S2DatesFile = json.loads(config.get('Parameters',"OpticalDates"))
-    ProdRadDatesList = json.loads(config.get('Parameters',"ProdRadarDates"))
-    ProdOptDatesList = json.loads(config.get('Parameters',"ProdOpticalDates"))  
-    ValDatesRad = json.loads(config.get('Parameters',"ValidationRadarDates"))
-    ValDatesOpt = json.loads(config.get('Parameters',"ValidationOpticalDates"))
-    Shapefiles = json.loads(config.get('Parameters',"Shapefiles"))
-    NbRun = int(config.get('Parameters','NbRun'))
-    NbSamples = int(config.get('Parameters','NbSamples'))
-    radius = int(config.get('Parameters','RegularizationRadius'))
-    lc = json.loads(config.get('Parameters',"LC"))
-    code = json.loads(config.get('Parameters',"CODE"))
-    crop = json.loads(config.get('Parameters',"CROP"))
-
+    try:
+	name = json.loads(config.get('Parameters',"JobName"))
+        workdir = json.loads(config.get('Parameters',"WorkingDirectory"))
+        TilesList = json.loads(config.get('Parameters',"Tiles"))
+        RadarImg = json.loads(config.get('Parameters',"RadarImages"))
+        OpticalImg = json.loads(config.get('Parameters',"OpticalImages"))
+        S1DatesFile = json.loads(config.get('Parameters',"RadarDates"))
+        S2DatesFile = json.loads(config.get('Parameters',"OpticalDates"))
+        ProdRadDatesList = json.loads(config.get('Parameters',"ProdRadarDates"))
+        ProdOptDatesList = json.loads(config.get('Parameters',"ProdOpticalDates"))  
+        ValDatesRad = json.loads(config.get('Parameters',"ValidationRadarDates"))
+        ValDatesOpt = json.loads(config.get('Parameters',"ValidationOpticalDates"))
+        Shapefiles = json.loads(config.get('Parameters',"Shapefiles"))
+        NbRun = int(config.get('Parameters','NbRun'))
+        NbSamples = int(config.get('Parameters','NbSamples'))
+        radius = int(config.get('Parameters','RegularizationRadius'))
+        lc = json.loads(config.get('Parameters',"LC"))
+        code = json.loads(config.get('Parameters',"CODE"))
+        crop = json.loads(config.get('Parameters',"CROP"))
+    except:
+        printError()
+	print "It seems that the job order file does note exist or that its structure is incorrect. Please check the job order file."
+	quit()
     # Primitives mappings #
     stepname = {"OPT":"S2 Optical Band Only",
 	        "OSO":"S2 + OSO Primitives",
@@ -670,12 +680,13 @@ if __name__ == "__main__":
 
     # Size Errors Manager
     if(len(TilesList) != len(RadarImg) or len(TilesList) != len(OpticalImg) or len(TilesList) != len(Shapefiles)):
-        print "ERROR:"
+
+	printError()
         print """In the section [Parameters] of the configuration file, the lists "Tiles", "RadarImages", "OpticalImages" and "Shapefiles" must have the same size."""
         quit()
 
     if(len(ProdRadDatesList) != len(ProdOptDatesList)):
-        print "ERROR:"
+        printError()
         print """In the section [Parameters] of the configuration file, the lists "ProdRadarDates" and "ProdOpticalDates" must have the same size."""
         quit()
 
@@ -769,7 +780,7 @@ if __name__ == "__main__":
     for d in ProdRadDatesList:
        RadBool = RadBool or (d>NbRadDates)
     if(RadBool):
-        print "ERROR:"
+        printError()
         print """In the section [Parameters] of the configuration file, the date indices in the "ProdRadarDates" list must be smaller than or equal to the number of radar dates which is equal to %d."""%(NbRadDates)
         quit()
 
@@ -777,7 +788,7 @@ if __name__ == "__main__":
     for d in ProdOptDatesList:
        OptBool = OptBool or (d>NbOptDates)
     if(OptBool):
-        print "ERROR:"
+        printError()
         print """In the section [Parameters] of the configuration file, the date indices in the "ProdOpticalDates" list must be smaller than or equal to the number of optical dates which is equal to %d."""%(NbOptDates)
         quit()
  
