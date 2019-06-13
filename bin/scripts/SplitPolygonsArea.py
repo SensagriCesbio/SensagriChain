@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# CesBIO 2017 #
 import sys;
-#sys.path.insert(0,'/usr/local/Cellar/gdal/1.11.0/lib/python2.7/site-packages')
 import os, osr
 import shutil
 import math
@@ -24,7 +24,7 @@ def GetAreaOfPolygons(dataSource,field,cl):
 
 
 #--------------------------------------------------------------
-def RandomInSituArea(shapefile, field, nbdraws, opath, workdir):
+def RandomInSituArea(shapefile, lc, code, crop, nbdraws, opath, workdir):
 	"""
         This function creates 2 * nbdraws new shapefiles by selecting 50% of polygons of each crop class present for \n
         a learning file and the remaining 50% for a validation file
@@ -61,8 +61,8 @@ def RandomInSituArea(shapefile, field, nbdraws, opath, workdir):
 		allFID.append(pid)
 		# Get the list of codes of the crop class and add them in a list
 		cl =  feature.GetField(field)
-                ty =  feature.GetField("CROP")
-                nm =  feature.GetField("LC")
+                ty =  feature.GetField(code)
+                nm =  feature.GetField(lc)
 		if cl not in classes:
 			classes.append(cl)
                         croptype[cl] = ty
@@ -190,10 +190,10 @@ def RandomInSituArea(shapefile, field, nbdraws, opath, workdir):
 		#Select polygons with the SQL query
 		layer.SetAttributeFilter(chV)
 		outShapefile2 = opath+"/Run_"+str(tirage)+".dir/"+namefile[-1]+"_seed"+str(tirage)+"_val.shp"
-		CreateNewLayer(layer, outShapefile2)
+		CreateNewLayer(layer, lc, code, crop, outShapefile2)
 
 #--------------------------------------------------------------
-def CreateNewLayer(layer, outShapefile):
+def CreateNewLayer(layer, lc, code, crop, outShapefile):
 	"""
         This function creates a new shapefile
 		ARGs:
@@ -203,7 +203,7 @@ def CreateNewLayer(layer, outShapefile):
         """
 	
 	#Warning: used to S2AGRI data model, next line to change, modify name of attributs
-	field_name_target = ['ID','LC', 'CODE', 'CROP']
+	field_name_target = ['ID',lc, code, crop]
 	#field_name_target = ['idParcelle','CodeS2agri','Nom_S2agri']
 	outDriver = ogr.GetDriverByName("ESRI Shapefile")
 	#if file already exists, delete it
@@ -254,6 +254,15 @@ if __name__ == "__main__":
     NbRun = int(sys.argv[2])
     OutputDir = sys.argv[3]
     WorkDir = sys.argv[4]
+    try:
+	lc = sys.argv[5]
+	code = sys.argv[6]
+	crop = sys.argv[7]
+    except:
+	lc = "LC"
+	code = "CODE"
+	crop = "CROP"
+ 
 
     if not os.path.exists(OutputDir):
         os.makedirs(OutputDir)
@@ -261,8 +270,8 @@ if __name__ == "__main__":
     for i in range(NbRun):
         if not os.path.exists(OutputDir + "/Run_%d.dir/"%(i) ):
             os.makedirs(OutputDir + "/Run_%d.dir/"%(i) ) 
-     
-    RandomInSituArea(shpFile,"CODE",NbRun,OutputDir,WorkDir)
+
+   RandomInSituArea(shpFile, lc, code, crop, NbRun,OutputDir,WorkDir)
 
 
 

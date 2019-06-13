@@ -1,5 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*- 
+
+# CesBIO 2018 #
 import os
 import sys
 import numpy

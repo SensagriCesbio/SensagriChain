@@ -2,6 +2,8 @@
 import os, sys
 from collections import Counter
 
+# CesBIO 2018 #
+
 
 from osgeo import ogr, osr
 try:
@@ -50,9 +52,9 @@ def getFieldElement(shape,driverName="ESRI Shapefile",field = "CODE",mode = "all
 #-- It allows us to know that the code 1313 corresponds to class Maize
 #--------------------------------------------------------------------
 
-def getLandCoverDictionary(shapeFile):
+def getLandCoverDictionary(shapeFile,lc,code,crop):
 
-    LegendCodeList = getFieldElement(shapeFile,"ESRI Shapefile","CODE",mode = "unique")
+    LegendCodeList = getFieldElement(shapeFile,"ESRI Shapefile",code,mode = "unique")
     LCdictionary = dict([(key, []) for key in LegendCodeList])
     driver = ogr.GetDriverByName("ESRI Shapefile")
     dataSource = driver.Open(shapeFile , 0)
@@ -60,11 +62,11 @@ def getLandCoverDictionary(shapeFile):
     layer = dataSource.GetLayer()
 
     for feature in layer:
-        idCode = feature.GetField("CODE")
+        idCode = feature.GetField(code)
         data = LCdictionary.get(idCode, "")
 
         if data == []:
-            LCdictionary[idCode] = feature.GetField("LC")
+            LCdictionary[idCode] = feature.GetField(lc)
 
     return LCdictionary
 
@@ -73,9 +75,9 @@ def getLandCoverDictionary(shapeFile):
 #-- It allows us to know if the code 1313 corresponds to a crop class
 #--------------------------------------------------------------------
 
-def getCropCoverDictionary(shapeFile):
+def getCropCoverDictionary(shapeFile,lc,code,crop):
     
-    LegendCodeList = getFieldElement(shapeFile,"ESRI Shapefile","CODE",mode = "unique")
+    LegendCodeList = getFieldElement(shapeFile,"ESRI Shapefile",code,mode = "unique")
     Dictionary = dict([(key, []) for key in LegendCodeList])
     driver = ogr.GetDriverByName("ESRI Shapefile")
     dataSource = driver.Open(shapeFile , 0)
@@ -83,24 +85,24 @@ def getCropCoverDictionary(shapeFile):
     layer = dataSource.GetLayer()
     
     for feature in layer:
-        idCode = feature.GetField("CODE")
+        idCode = feature.GetField(code)
         data = Dictionary.get(idCode, "")
         
         if data == []:
-            Dictionary[idCode] = feature.GetField("CROP")
+            Dictionary[idCode] = feature.GetField(crop)
 
     return Dictionary
 
-def getClassNumber(shapeFile):
+def getClassNumber(shapeFile,lc,code,crop):
     
-    LegendCodeList = getFieldElement(shapeFile,"ESRI Shapefile","CODE",mode = "unique")
+    LegendCodeList = getFieldElement(shapeFile,"ESRI Shapefile",code,mode = "unique")
     Dictionary = dict([(key, []) for key in LegendCodeList])
     driver = ogr.GetDriverByName("ESRI Shapefile")
     dataSource = driver.Open(shapeFile , 0)
     
     layer = dataSource.GetLayer()
    
-    classList = [  feature.GetField("CODE") for feature in layer]
+    classList = [  feature.GetField(code) for feature in layer]
     
     LabelCounter = Counter(classList)
     print LabelCounter
@@ -110,11 +112,19 @@ def getClassNumber(shapeFile):
 if __name__ == "__main__":
     # Get the input Layer
     inShapefile = sys.argv[1]
-    
-    CropDictionary =  getCropCoverDictionary(inShapefile)
-    CoverDictionary = getLandCoverDictionary(inShapefile)
+    try:
+	lc = sys.argv[2]
+	code = sys.argv[3]
+	crop = sys.argv[4]
+    except:
+	lc = "LC"
+	code = "CODE"
+	crop = "CROP"
+
+    CropDictionary =  getCropCoverDictionary(inShapefile,lc,code,crop)
+    CoverDictionary = getLandCoverDictionary(inShapefile,lc,code,crop)
 
     print CropDictionary
     print CoverDictionary      
 
-    getClassNumber(inShapefile) 
+    getClassNumber(inShapefile,lc,code,crop) 

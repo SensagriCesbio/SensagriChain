@@ -1,6 +1,7 @@
 /*
  * ExtractSampleFromVectorFile.hpp
  *
+ *  Update: Ludo (add lc, code and crop management) 
  *  Created on: 19/1/2015
  *      Author: silvia
  */
@@ -27,8 +28,6 @@ public:
 	typedef itk::ProcessObject Superclass;
 	typedef itk::SmartPointer<Self> Pointer;
 	typedef itk::SmartPointer<const Self> ConstPointer;
-
-
 
 	itkNewMacro(Self);
 	itkTypeMacro(ExtractSampleFromVectorFile, itk::ProcessObject);
@@ -66,6 +65,10 @@ public:
 
 	int GetNumberOfClasses( );
 
+	std::string SetCropTypeClassKey(std::string inputstring);
+	std::string SetIsCropClassKey(std::string inputstring);
+	std::string SetLabelClassKey(std::string inputstring);
+
 	std::map<ClassLabelType, std::string>*  GetInfoLabelsOfClasses ( );
 
 	std::map<ClassLabelType, unsigned int>*  GetInfoSamplesOfClasses ( );
@@ -102,7 +105,6 @@ private:
 
 	std::string _CropTypeClassKey;
 	std::string _IsCropClassKey;
-
 	std::string _LabelClassKey;
 
 	std::map<ClassLabelType, std::string> _ClassesLabels;

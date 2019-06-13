@@ -45,8 +45,12 @@ int main(int argc, char * argv[])
     std::string ShpFileName  = argv[1];
     std::string image_name= argv[2];
     std::string path = argv[3];
+    std::string lc = argv[4];   
+    std::string code = argv[5];   
+    std::string crop = argv[6];   
     std::string type;   
- 
+      
+
     if(ShpFileName.find("learn") != std::string::npos)
     {
       type="_learn";
@@ -92,6 +96,14 @@ int main(int argc, char * argv[])
     
     SampleGenerator->SetInputImage(readerImage->GetOutput());
     SampleGenerator->SetInputVectorData(vectorReader->GetOutput());
+
+    // Define specific shapefile column name  
+    SampleGenerator->SetCropTypeClassKey(code);
+    SampleGenerator->SetIsCropClassKey(crop);
+    SampleGenerator->SetLabelClassKey(lc);
+
+
+
     std::cout << "Sample generator defined"  << std::endl;
     
     //std::cout<<" Generate List  "  << std::endl;

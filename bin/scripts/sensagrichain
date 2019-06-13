@@ -18,6 +18,7 @@ import numpy as np
 import argparse
 import Results
 import GenerateCommonDates as gcdates
+import datetime
 from dates import GetDates,GetDatesSentinel
 from time import gmtime, strftime
 
@@ -633,7 +634,7 @@ if __name__ == "__main__":
         crop = json.loads(config.get('Parameters',"CROP"))
     except:
         printError()
-	print "It seems that the job order file does note exist or that its structure is incorrect. Please check the job order file."
+	print "It seems that the job order file does not exist or that its structure is incorrect. Please check the job order file."
 	quit()
     # Primitives mappings #
     stepname = {"OPT":"S2 Optical Band Only",
@@ -851,7 +852,7 @@ if __name__ == "__main__":
         'indir': workdir+"/WorkFiles/Shapefiles/SplitArea_%s/"%(tile),
         'createdir': workdir+"/"+tile,
         'outdir': workdir+"/"+tile+"/"+"Optical",
-        'arg':'%in-dir%/%path% ' + workdir+"/WorkFiles/Images/" + OpticalImages[tile]  + ' %out-dir%/%dirname%/',
+        'arg':'%in-dir%/%path% ' + workdir+"/WorkFiles/Images/" + OpticalImages[tile]  + ' %out-dir%/%dirname%/' + " %s %s %s"%(lc,code,crop),
         'report':"Reports/OptExtReport_%s.txt"%(tile)
         }
       
@@ -864,7 +865,7 @@ if __name__ == "__main__":
         'prog':"ExtractSamplesNew",
         'indir': workdir+"/WorkFiles/Shapefiles/SplitArea_%s/"%(tile),
         'outdir': workdir+"/"+tile+"/"+"Radar",
-        'arg':'%in-dir%/%path% ' + workdir+"/WorkFiles/Images/" + RadarImages[tile]  + ' %out-dir%/%dirname%/',
+        'arg':'%in-dir%/%path% ' + workdir+"/WorkFiles/Images/" + RadarImages[tile]  + ' %out-dir%/%dirname%/' + " %s %s %s"%(lc,code,crop),
         'report':"Reports/RadExtReport_%s.txt"%(tile)
         }
 

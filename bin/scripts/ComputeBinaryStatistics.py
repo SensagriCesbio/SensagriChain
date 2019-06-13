@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+### CesBIO 2019 ###
 import os
 import sys
 import numpy as np
@@ -35,14 +36,14 @@ def getDirectBinaryStatistics(MatrixFileBase,Dates):
         OA[idDate] = float((TN + TP)) / (FP + TP + TN + FN)   
     return  PreCrop , RecCrop ,  PreNoCrop, RecNoCrop, OA
 
-def getBinaryStatistics(PredictedFile,ReferenceFile,ShapeFile):
+def getBinaryStatistics(PredictedFile,ReferenceFile,ShapeFile,lc,code,crop):
     PredictedSet = loadtxt(PredictedFile, delimiter=',')
     ReferenceSet = loadtxt(ReferenceFile, delimiter=',')
 
     if len(PredictedSet) != len(ReferenceSet):
         raise Exception(" Predicted and reference data set do not contain the same number of samples")
     
-    CropDict = getCropCoverDictionary(ShapeFile)
+    CropDict = getCropCoverDictionary(ShapeFile,lc,code,crop)
 
     TP = TN = FP = FN = 0
     for id,ReferenceSample in enumerate(ReferenceSet):
@@ -69,9 +70,9 @@ def getBinaryStatistics(PredictedFile,ReferenceFile,ShapeFile):
 #--------------------------------------------------------------------
 
 
-def getBinaryQualityMeasures(PredictedFile,ReferenceFile,ShapeFile):
+def getBinaryQualityMeasures(PredictedFile,ReferenceFile,ShapeFile,lc,code,crop):
 
-    [TP,TN,FP,FN] = getBinaryStatistics(PredictedFile,ReferenceFile,ShapeFile)
+    [TP,TN,FP,FN] = getBinaryStatistics(PredictedFile,ReferenceFile,ShapeFile,lc,code,crop)
     
     PreCrop = float(TP) / (FP + TP)
 
@@ -87,8 +88,7 @@ def getBinaryQualityMeasures(PredictedFile,ReferenceFile,ShapeFile):
 
 #--------------------------------------------------------------------
 
-
-def getBinaryTemporalStatistics(InPredictedDir,btype,ReferenceFile,Dates,ShapeFile):
+def getBinaryTemporalStatistics(InPredictedDir,btype,ReferenceFile,Dates,ShapeFile,lc,code,crop):
     
     OA = np.zeros(len(Dates))
     PreCrop = np.zeros(len(Dates))
@@ -99,7 +99,7 @@ def getBinaryTemporalStatistics(InPredictedDir,btype,ReferenceFile,Dates,ShapeFi
     for idDate,iDate in enumerate(Dates):
         print "date =",idDate 
         PredictedFile =  InPredictedDir + btype +"PredictedLabels_Date%i" % iDate +".txt"
-        [PreCrop[idDate] , RecCrop[idDate] , PreNoCrop[idDate], RecNoCrop[idDate], OA[idDate]] = getBinaryQualityMeasures(PredictedFile,ReferenceFile,ShapeFile)
+        [PreCrop[idDate] , RecCrop[idDate] , PreNoCrop[idDate], RecNoCrop[idDate], OA[idDate]] = getBinaryQualityMeasures(PredictedFile,ReferenceFile,ShapeFile,lc,code,crop)
 
     return  PreCrop , RecCrop ,  PreNoCrop, RecNoCrop, OA
 
@@ -113,66 +113,3 @@ def CI95(x):
         CI = q*sigma/np.sqrt(df+1) 
         return CI
 
-#--------------------------------------------------------------------
-
-
-if __name__ == "__main__":
-
-  dates,datesLabels = GetDates("/home/arnaudl/Documents/OTB/Sentinel2-Data/S2_DateListF.txt")
-  NbDates = 33
-  Nbtirages = 5
-  InDir = "OpticalSamples/"
-  PC = np.zeros((Nbtirages,NbDates))
-  RC = np.zeros((Nbtirages,NbDates))
-  PNoC = np.zeros((Nbtirages,NbDates))
-  RNoC = np.zeros((Nbtirages,NbDates))
-  OA = np.zeros((Nbtirages,NbDates))
-  for tirage in range(Nbtirages):
-    DirRun = InDir + "Run_%i/" % (tirage) 
-    PredictedDir = DirRun + "RF_ResultsAll/Predicted/"
-    ReferenceFile = DirRun + "CropTypeLabels_val.txt"
-    BinaryFile = DirRun + "CropLabels_val.txt"
-    ShapeFile = "../../ShapeFiles/CombineFinal-L93-20Merosion_Ludovic.shp"
-
-    ReferenceBinary = loadtxt(BinaryFile, delimiter=',')
-    NbrCrop = 0
-    NbrNoCrop = 0
-    for value in ReferenceBinary:
-      if int(value) == 0:
-        NbrNoCrop += 1
-      else:
-        NbrCrop += 1
-  
-    print ""
-    print "--------------------------------------------"
-    print "* Deduced Binary Classification for Run_%i *" % (tirage) 
-    print "Number of Crop pixels:\t\t",NbrCrop
-    print "Number of NoCrop pixels:\t",NbrNoCrop
-    print "Total:\t\t\t\t",NbrCrop + NbrNoCrop
-  
-    Dates = []
-    for iDate in range(1, NbDates+1):
-        Dates.append (iDate)
-    print PredictedDir
-    print ReferenceFile
-    print BinaryFile
-
-    PreCrop , RecCrop ,  PreNoCrop, RecNoCrop, OverallA = getBinaryTemporalStatistics(PredictedDir,ReferenceFile,Dates,ShapeFile)
-    PC[tirage] = 100*PreCrop
-    RC[tirage] = 100*RecCrop
-    PNoC[tirage] = 100*PreNoCrop
-    RNoC[tirage] = 100*RecNoCrop
-    OA[tirage] = 100*OverallA
-  aPC = np.mean(PC,axis = 0)
-  aRC = np.mean(RC,axis = 0)
-  aPNoC = np.mean(PNoC,axis = 0)
-  aRNoC = np.mean(RNoC,axis = 0)
-  aOA = np.mean(OA,axis = 0)
-  sigma = np.std(OA,axis = 0)
-    
-  CI = CI95(OA)   
-  print "Date\tPreC\tRecC\tPreNoC\tRecNoC\tOA\tCI95"
-  print "-----------------------------------------------------"
-  for d in range(len(PreCrop)):
-    print "%s\t%.1f\t%.1f\t%.1f\t%.1f\t%.1f\t%.1f" %(datesLabels[d],aPC[d],aRC[d],aPNoC[d],aRNoC[d],aOA[d],CI[d])
-  print "-----------------------------------------------------"

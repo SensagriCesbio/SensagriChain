@@ -13,7 +13,7 @@
 
 template <class TImage, class TVectorData>
 ExtractSampleFromVectorFile<TImage, TVectorData>::ExtractSampleFromVectorFile ( ) :
-_CropTypeClassKey("CODE"), _LabelClassKey("TYPE"),_IsCropClassKey("CROP")
+_CropTypeClassKey("CODE"), _LabelClassKey("LC"),_IsCropClassKey("CROP")
 {
 
 	//Para que sirve?
@@ -239,7 +239,9 @@ void ExtractSampleFromVectorFile<TImage, TVectorData>::GenerateLists()
 							
 
 							if(!isInterior ){
-
+							        std::cout << "CODE:" << _CropTypeClassKey << std::endl;
+							        std::cout << "CROP:" << _IsCropClassKey << std::endl;
+							        std::cout << "LC  :" << _LabelClassKey << std::endl;
 								ListSample->PushBack(it.Get());
 								ListCropTypeLabel->PushBack(datanode->GetFieldAsInt(_CropTypeClassKey));
 								ListBinaryCropLabel->PushBack(datanode->GetFieldAsInt(_IsCropClassKey));
@@ -278,6 +280,30 @@ int ExtractSampleFromVectorFile<TImage, TVectorData>::GetNumberOfClasses ( )
 	_NumberOfClasses = 	_ClassesLabels.size();
   return (this->_NumberOfClasses);
 };
+
+
+template <class TImage, class TVectorData>
+std::string ExtractSampleFromVectorFile<TImage, TVectorData>::SetCropTypeClassKey (std::string inputstring)
+{
+	_CropTypeClassKey = inputstring;
+  return (this->_CropTypeClassKey);
+};
+
+template <class TImage, class TVectorData>
+std::string ExtractSampleFromVectorFile<TImage, TVectorData>::SetIsCropClassKey (std::string inputstring)
+{
+	_IsCropClassKey = inputstring;
+  return (this->_IsCropClassKey);
+};
+
+template <class TImage, class TVectorData>
+std::string ExtractSampleFromVectorFile<TImage, TVectorData>::SetLabelClassKey (std::string inputstring)
+{
+	_LabelClassKey = inputstring;
+  return (this->_LabelClassKey);
+};
+
+
 
 
 template <class TImage, class TVectorData>
