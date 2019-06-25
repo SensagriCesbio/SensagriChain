@@ -239,9 +239,9 @@ void ExtractSampleFromVectorFile<TImage, TVectorData>::GenerateLists()
 							
 
 							if(!isInterior ){
-							        std::cout << "CODE:" << _CropTypeClassKey << std::endl;
-							        std::cout << "CROP:" << _IsCropClassKey << std::endl;
-							        std::cout << "LC  :" << _LabelClassKey << std::endl;
+							        //std::cout << "CODE:" << _CropTypeClassKey << std::endl;
+							        //std::cout << "CROP:" << _IsCropClassKey << std::endl;
+							        //std::cout << "LC  :" << _LabelClassKey << std::endl;
 								ListSample->PushBack(it.Get());
 								ListCropTypeLabel->PushBack(datanode->GetFieldAsInt(_CropTypeClassKey));
 								ListBinaryCropLabel->PushBack(datanode->GetFieldAsInt(_IsCropClassKey));

@@ -176,11 +176,11 @@ def UpdateJoborder(joborder):
 	for line in jo.readlines():
 	    l = line.split(":")
 	    if(l[0] == "RadarImages"):
-		jotext = jotext.replace(l[1],"                    %s\n"%(newS1images))
+		jotext = jotext.replace(l[1],"                    %s\n"%(newS1images)).replace("'", '"')
 	    if(l[0] == "OpticalImages"):
-		jotext = jotext.replace(l[1],"                  %s\n"%(newS2images))
+		jotext = jotext.replace(l[1],"                  %s\n"%(newS2images)).replace("'", '"')
 	    if(l[0] == "Shapefiles"):
-		jotext = jotext.replace(l[1],"                     %s\n"%(newShapefiles))
+		jotext = jotext.replace(l[1],"                     %s\n"%(newShapefiles)).replace("'", '"')
 	jo.close()
 	# Save updated joborder
 	jo = open(joborder,"w")
@@ -327,6 +327,26 @@ srun -n $ntasks chdb --in-type dir --in-dir $root/Radar --command-line "$$SENSAG
 rm -r $root/Radar.out
 """)
 
+removeOptical = string.Template("""
+printlog "Remove Null Optical Only"
+$srun -n $ntasks chdb --in-type dir --in-dir $root/Optical --command-line "$$SENSAGRICHAIN_HOME/bin/cpp/Executables/RemoveNulOnly %in-dir%/%path%/CropTypeLabels_val.txt"
+rm -r $root/Optical.out
+
+$srun -n $ntasks chdb --in-type dir --in-dir $root/Optical --command-line "$$SENSAGRICHAIN_HOME/bin/cpp/Executables/RemoveNulOnly %in-dir%/%path%/CropTypeLabels_learn.txt"
+rm -r $root/Optical.out
+""")
+
+removeRadar = string.Template("""
+printlog "Remove Null Radar Only"
+$srun -n $ntasks chdb --in-type dir --in-dir $root/Radar --command-line "$$SENSAGRICHAIN_HOME/bin/cpp/Executables/RemoveNulOnly %in-dir%/%path%/CropTypeLabels_val.txt"
+rm -r $root/Radar.out
+
+$srun -n $ntasks chdb --in-type dir --in-dir $root/Radar --command-line "$$SENSAGRICHAIN_HOME/bin/cpp/Executables/RemoveNulOnly %in-dir%/%path%/CropTypeLabels_learn.txt"
+rm -r $root/Radar.out
+""")
+
+
+
 CreateClassificationDir = """
 # Classifications #
 printlog "Classifications"
@@ -413,15 +433,13 @@ rm -r $indir.out
 chdbClassifMixTrain = string.Template("""
 # Classification Mix Construct coherent training set: $step $case $method #
 printlog "Classification Mix Construct coherent training set: $step $case $method"
-printdebug "------- $step: $case $method -------: Dates: ${dateslist}"
-$srun -n $ntasks chdb --in-type dir --in-dir $indir --command-line "$$SENSAGRICHAIN_HOME/bin/scripts/SamplingSelection.py $$dirname/WorkFiles/Classes_CROP.txt ${previous}/CropTypeLabels_learn${case}_$NbSamples.txt CropTypeLabels_pred${appid}_$NbSamples.txt ${previous}/Profiles_learn${case}_$NbSamples${method}.txt Profiles_pred${appid}_$NbSamples.txt CropMix"
+$srun -n $ntasks chdb --in-type dir --in-dir $indir --command-line "$$SENSAGRICHAIN_HOME/bin/scripts/SamplingSelection.py $$dirname/WorkFiles/Classes_CHANGE.txt ${previous}/CropTypeLabels_learn${case}_$NbSamples.txt CropTypeLabels_pred${appid}_$NbSamples.txt ${previous}/Profiles_learn${case}_$NbSamples${method}.txt Profiles_pred${appid}_$NbSamples.txt CropMix"
 rm -r $indir.out
 """)
 
 chdbClassifMixCla = string.Template("""
 # Classification Mix Final Classification: $step $case $method #
 printlog "Classification Mix final Classification $step $case $method"
-printdebug "------- $step: $case $method -------: Dates: ${dateslist}"
 $srun -n $ntasks chdb --in-type dir --in-dir $indir --command-line "otbApplicationLauncherCommandLine RFClassification $$SENSAGRICHAIN_HOME/bin/cpp/ProbabilityClassifier/build -trainprofiles Profiles_pred${appid}_${NbSamples}_CropMix.txt -valprofiles Profiles_val${case}${method}.txt -bands $NbChannels -dateslist ${dateslist} -model Classifications/Models/Model${case}${method}${mixid} -trainlabels CropTypeLabels_pred${appid}_${NbSamples}_CropMix.txt -vallabels CropTypeLabels_val${case}.txt -predlabels Classifications/PredictedLabels/PredictedLabels${case}${method}${mixid} -conf Classifications/Confidence/Confidence${case}${method}${mixid} -prob Classifications/Probabilities/Probabilities${case}${method}${mixid} -cmatrix Classifications/ConfusionsMatrices/ConfusionsMatrix${case}${method}${mixid} -vi Classifications/VariablesImportances/VariablesImportances${case}${method}${mixid} -nomen $nomen${case}.csv
 "
 rm -r $indir.out
@@ -633,6 +651,7 @@ if __name__ == "__main__":
         code = json.loads(config.get('Parameters',"CODE"))
         crop = json.loads(config.get('Parameters',"CROP"))
     except:
+	raise
         printError()
 	print "It seems that the job order file does not exist or that its structure is incorrect. Please check the job order file."
 	quit()
@@ -1315,6 +1334,10 @@ if __name__ == "__main__":
 
     if(QOption["Optical"]["Sampling"] and QOption["Radar"]["Sampling"]):
        scriptfile.write(remove.substitute(RadOptRem))
+    if(QOption["Optical"]["Sampling"] and not(QOption["Radar"]["Sampling"])):
+       scriptfile.write(removeOptical.substitute(RadOptRem))
+    if(not(QOption["Optical"]["Sampling"]) and QOption["Radar"]["Sampling"]):
+       scriptfile.write(removeRadar.substitute(RadOptRem))
  
  
     if(QOption["Optical"]["Sampling"]):
@@ -1364,7 +1387,7 @@ if __name__ == "__main__":
 
     # Classification mix. #
     #TODO: HARD CODDED VERSION SO FAR #
-    if(False):
+    if(True):
 	try:
 	    # Validation with other model
 	    OptCla["modelid"]   = "_" + json.loads(config.get("Mix","ModelId"))
@@ -1374,7 +1397,7 @@ if __name__ == "__main__":
             scriptfile.write(chdbClassifMixModel.substitute(OptCla))
                  
             # Calculation of Indices for the whole training set
-            IndLearn['arg'] = "Profiles_learn.txt Profiles_learn_%s.txt %d %d"%(prim,NbOptDates,code2prim)
+            IndLearn['arg'] = "Profiles_learn.txt Profiles_learn_%s.txt %d %d"%(prim,NbOptDates,primCode)
             scriptfile.write(chdbOverDir.substitute(IndLearn))
         
             # Apply other model to whole training set
@@ -1384,6 +1407,7 @@ if __name__ == "__main__":
 
             # Sample the new artificial dataset
             createlinks = {
+            'srun':sruncom,  
             'ntasks':NbRun+1,
             'indir': workdir+"/AllTiles/Optical",
             'step':"Creation Symbolic links",
@@ -1392,7 +1416,7 @@ if __name__ == "__main__":
 	    'report':"Reports/CreateLinksReport.txt"
              }
 	    a = OptCla["appid"]
-            createlinks['arg'] = "CropTypeLabels_pred%s_Dates%d.txt CropTypeLabels_pred%s.txt\n"%(OptCla["appid"],ValDatesOpt[-1],a)
+            createlinks['arg'] = "CropTypeLabels_pred%s_Date%d.txt CropTypeLabels_pred%s.txt\n"%(OptCla["appid"],ValDatesOpt[-1],a)
             scriptfile.write(chdbOverDirNormal.substitute(createlinks))
             createlinks['arg'] = "Profiles_learn%s.txt Profiles_pred%s.txt\n"%(OptCla["method"],a)
             scriptfile.write(chdbOverDirNormal.substitute(createlinks))
@@ -1418,8 +1442,7 @@ if __name__ == "__main__":
             scriptfile.write(chdbClassifMixCla.substitute(OptCla))
  
         except:
-	    #raise
-	    pass
+	    raise
 
 
 

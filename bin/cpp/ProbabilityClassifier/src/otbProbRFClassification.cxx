@@ -183,7 +183,9 @@ private:
 		unsigned int numDates;
 		unsigned int numBands 	= GetParameterInt("bands");
 
+		// ATTENTION MAPPING //
 	        // Conversion legende//
+		// PARTICULIER   A NOTE ANALYSE. A ENLEVER PLUS TARD.
 		std::map<unsigned int, unsigned int> AdaptLegend;
 		if(Qusemodel==true) 
 		{

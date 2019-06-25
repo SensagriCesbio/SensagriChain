@@ -60,8 +60,8 @@ def RandomInSituArea(shapefile, lc, code, crop, nbdraws, opath, workdir):
 		pid = feature.GetFID()
 		allFID.append(pid)
 		# Get the list of codes of the crop class and add them in a list
-		cl =  feature.GetField(field)
-                ty =  feature.GetField(code)
+		cl =  feature.GetField(code)
+                ty =  feature.GetField(crop)
                 nm =  feature.GetField(lc)
 		if cl not in classes:
 			classes.append(cl)
@@ -104,7 +104,7 @@ def RandomInSituArea(shapefile, lc, code, crop, nbdraws, opath, workdir):
             		listArea = []
 			#Count the features of this class
 			featureCount = float(layer.GetFeatureCount())
-                	TotalArea = GetAreaOfPolygons(dataSource,field,cl)
+                	TotalArea = GetAreaOfPolygons(dataSource,code,cl)
             		#print cl
                 	#print TotalArea
 			#As we chose 50 percent, the total of features is divided by 2
@@ -113,7 +113,7 @@ def RandomInSituArea(shapefile, lc, code, crop, nbdraws, opath, workdir):
 			#Get all the IDs of the polygons of the class and add them in a list
 			layer = dataSource.GetLayer()
 			#Selects the polygons of the individual crop class
-			layer.SetAttributeFilter(field+" = "+str(cl))
+			layer.SetAttributeFilter(code + " = "+str(cl))
 			for feat in layer:
 				_id = feat.GetFID()
 				listid.append(_id)
@@ -164,7 +164,7 @@ def RandomInSituArea(shapefile, lc, code, crop, nbdraws, opath, workdir):
 		if os.path.isfile(outShapefile):
 			continue
 		#Create a new layer with the selection
-		CreateNewLayer(layer, outShapefile)
+		CreateNewLayer(layer, lc, code, crop, outShapefile)
 		
 		#Process to create the 2nd SQL request by choosing the polygons that were not choose before
 		
@@ -271,7 +271,7 @@ if __name__ == "__main__":
         if not os.path.exists(OutputDir + "/Run_%d.dir/"%(i) ):
             os.makedirs(OutputDir + "/Run_%d.dir/"%(i) ) 
 
-   RandomInSituArea(shpFile, lc, code, crop, NbRun,OutputDir,WorkDir)
+    RandomInSituArea(shpFile, lc, code, crop, NbRun,OutputDir,WorkDir)
 
 
 
