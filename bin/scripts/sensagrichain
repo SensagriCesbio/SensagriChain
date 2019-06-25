@@ -416,7 +416,7 @@ chdbClassifMixModel = string.Template("""
 # Classification Mix. Use previous train model and evaluate validation: $step $case $method #
 printlog "Classification Mix. Use previous train model and evaluate validation: $step $case $method"
 export pathusemodel=$usemodel
-$srun -n $ntasks chdb --in-type dir --in-dir $indir --command-line "otbApplicationLauncherCommandLine RFClassification $$SENSAGRICHAIN_HOME/bin/cpp/ProbabilityClassifier/build -trainprofiles Profiles_learn${case}_$NbSamples${method}.txt -valprofiles Profiles_val${case}${method}.txt -bands $NbChannels -dateslist ${dateslist} -model Classifications/null -usemodel $$pathusemodel -trainlabels CropTypeLabels_learn${case}_$NbSamples.txt -vallabels CropTypeLabels_val${case}.txt -predlabels Classifications/PredictedLabels/PredictedLabels${case}${method}${modelid} -conf Classifications/Confidence/Confidence${case}${method}${modelid} -prob Classifications/Probabilities/Probabilities${case}${method}${modelid} -cmatrix Classifications/ConfusionsMatrices/ConfusionsMatrix${case}${method}${modelid} -vi Classifications/VariablesImportances/VariablesImportances${case}${method}${modelid} -nomen $nomen${case}.csv
+$srun -n $ntasks chdb --in-type dir --in-dir $indir --command-line "otbApplicationLauncherCommandLine RFClassification $$SENSAGRICHAIN_HOME/bin/cpp/ProbabilityClassifier/build -trainprofiles Profiles_learn${case}_$NbSamples${method}.txt -valprofiles Profiles_val${case}${method}.txt -bands $NbChannels -dateslist ${dateslist} -model Classifications/Models/null -usemodel $$pathusemodel -trainlabels CropTypeLabels_learn${case}_$NbSamples.txt -vallabels CropTypeLabels_val${case}.txt -predlabels Classifications/PredictedLabels/PredictedLabels${case}${method}${modelid} -conf Classifications/Confidence/Confidence${case}${method}${modelid} -prob Classifications/Probabilities/Probabilities${case}${method}${modelid} -cmatrix Classifications/ConfusionsMatrices/ConfusionsMatrix${case}${method}${modelid} -vi Classifications/VariablesImportances/VariablesImportances${case}${method}${modelid} -nomen $nomen${case}.csv
 "
 rm -r $indir.out
 """)
@@ -425,7 +425,7 @@ chdbClassifMixApply = string.Template("""
 # Classification Mix. Apply previous train model to training set label: $step $case $method #
 printlog "Classification Mix. Apply previous train model to training set label: $step $case $method"
 export pathusemodel=$usemodel
-$srun -n $ntasks chdb --in-type dir --in-dir $indir --command-line "otbApplicationLauncherCommandLine RFClassification $$SENSAGRICHAIN_HOME/bin/cpp/ProbabilityClassifier/build -trainprofiles Profiles_learn${case}_$NbSamples${method}.txt -valprofiles Profiles_learn${case}${method}.txt -bands $NbChannels -dateslist ${dateslist} -model Classifications/null -usemodel $$pathusemodel -trainlabels CropTypeLabels_learn${case}_$NbSamples.txt -vallabels CropTypeLabels_learn${case}.txt -predlabels CropTypeLabels${case}_pred${appid} -conf Classifications/Confidence/Confidence${case}${method}${appid} -prob Classifications/Probabilities/Probabilities${case}${method}${appid} -cmatrix Classifications/ConfusionsMatrices/ConfusionsMatrix${case}${method}${appid} -vi Classifications/VariablesImportances/VariablesImportances${case}${method}${appid} -nomen $nomen${case}.csv
+$srun -n $ntasks chdb --in-type dir --in-dir $indir --command-line "otbApplicationLauncherCommandLine RFClassification $$SENSAGRICHAIN_HOME/bin/cpp/ProbabilityClassifier/build -trainprofiles Profiles_learn${case}_$NbSamples${method}.txt -valprofiles Profiles_learn${case}${method}.txt -bands $NbChannels -dateslist ${dateslist} -model Classifications/Models/null -usemodel $$pathusemodel -trainlabels CropTypeLabels_learn${case}_$NbSamples.txt -vallabels CropTypeLabels_learn${case}.txt -predlabels CropTypeLabels${case}_pred${appid} -conf Classifications/Confidence/Confidence${case}${method}${appid} -prob Classifications/Probabilities/Probabilities${case}${method}${appid} -cmatrix Classifications/ConfusionsMatrices/ConfusionsMatrix${case}${method}${appid} -vi Classifications/VariablesImportances/VariablesImportances${case}${method}${appid} -nomen $nomen${case}.csv
 "
 rm -r $indir.out
 """)
@@ -433,14 +433,14 @@ rm -r $indir.out
 chdbClassifMixTrain = string.Template("""
 # Classification Mix Construct coherent training set: $step $case $method #
 printlog "Classification Mix Construct coherent training set: $step $case $method"
-$srun -n $ntasks chdb --in-type dir --in-dir $indir --command-line "$$SENSAGRICHAIN_HOME/bin/scripts/SamplingSelection.py $$dirname/WorkFiles/Classes_CHANGE.txt ${previous}/CropTypeLabels_learn${case}_$NbSamples.txt CropTypeLabels_pred${appid}_$NbSamples.txt ${previous}/Profiles_learn${case}_$NbSamples${method}.txt Profiles_pred${appid}_$NbSamples.txt CropMix"
+$srun -n $ntasks chdb --in-type dir --in-dir $indir --command-line "$$SENSAGRICHAIN_HOME/bin/scripts/SamplingSelection.py $$dirname/WorkFiles/Classes_CHANGE.txt ${previous}/CropTypeLabels_learn${case}_$NbSamples.txt CropTypeLabels_pred${appid}_$NbSamples.txt ${previous}/Profiles_learn${case}_$NbSamples${method}.txt Profiles_pred${appid}_$NbSamples.txt ${mixid}"
 rm -r $indir.out
 """)
 
 chdbClassifMixCla = string.Template("""
 # Classification Mix Final Classification: $step $case $method #
 printlog "Classification Mix final Classification $step $case $method"
-$srun -n $ntasks chdb --in-type dir --in-dir $indir --command-line "otbApplicationLauncherCommandLine RFClassification $$SENSAGRICHAIN_HOME/bin/cpp/ProbabilityClassifier/build -trainprofiles Profiles_pred${appid}_${NbSamples}_CropMix.txt -valprofiles Profiles_val${case}${method}.txt -bands $NbChannels -dateslist ${dateslist} -model Classifications/Models/Model${case}${method}${mixid} -trainlabels CropTypeLabels_pred${appid}_${NbSamples}_CropMix.txt -vallabels CropTypeLabels_val${case}.txt -predlabels Classifications/PredictedLabels/PredictedLabels${case}${method}${mixid} -conf Classifications/Confidence/Confidence${case}${method}${mixid} -prob Classifications/Probabilities/Probabilities${case}${method}${mixid} -cmatrix Classifications/ConfusionsMatrices/ConfusionsMatrix${case}${method}${mixid} -vi Classifications/VariablesImportances/VariablesImportances${case}${method}${mixid} -nomen $nomen${case}.csv
+$srun -n $ntasks chdb --in-type dir --in-dir $indir --command-line "otbApplicationLauncherCommandLine RFClassification $$SENSAGRICHAIN_HOME/bin/cpp/ProbabilityClassifier/build -trainprofiles Profiles_pred${appid}_${NbSamples}_${mixid}.txt -valprofiles Profiles_val${case}${method}.txt -bands $NbChannels -dateslist ${dateslist} -model Classifications/Models/Model${case}${method}${mixid} -trainlabels CropTypeLabels_pred${appid}_${NbSamples}_${mixid}.txt -vallabels CropTypeLabels_val${case}.txt -predlabels Classifications/PredictedLabels/PredictedLabels${case}${method}${mixid} -conf Classifications/Confidence/Confidence${case}${method}${mixid} -prob Classifications/Probabilities/Probabilities${case}${method}${mixid} -cmatrix Classifications/ConfusionsMatrices/ConfusionsMatrix${case}${method}${mixid} -vi Classifications/VariablesImportances/VariablesImportances${case}${method}${mixid} -nomen $nomen${case}.csv
 "
 rm -r $indir.out
 """)
@@ -1438,7 +1438,7 @@ if __name__ == "__main__":
  
 	    # Usual Classification with predicted training set
             OptCla['dateslist'] = loopOpt
-            OptCla['mixid'] = "_CropMix"
+            OptCla['mixid'] = json.loads(config.get("Mix","CropMixId"))
             scriptfile.write(chdbClassifMixCla.substitute(OptCla))
  
         except:

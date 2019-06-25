@@ -95,6 +95,9 @@ private:
 		AddParameter(ParameterType_InputFilename, "usemodel", "Model file to import for validation");
                 MandatoryOff("usemodel");
 
+                AddParameter(ParameterType_InputFilename, "adapt", "Option to adapt legend (OBSOLETE)");
+                MandatoryOff("adapt");
+
 		AddParameter(ParameterType_InputFilename, "trainlabels", "Input labels for training");		
 
 		AddParameter(ParameterType_InputFilename, "vallabels", "Input labels for validation");		
@@ -161,6 +164,7 @@ private:
 
                 bool Qtrain = HasValue("model");
                 bool Qusemodel = HasValue("usemodel");
+                bool Qadapt = HasValue("adapt");
 
 		if(Qtrain==false and Qusemodel==false)
 		{
@@ -185,47 +189,87 @@ private:
 
 		// ATTENTION MAPPING //
 	        // Conversion legende//
-		// PARTICULIER   A NOTE ANALYSE. A ENLEVER PLUS TARD.
-		std::map<unsigned int, unsigned int> AdaptLegend;
-		if(Qusemodel==true) 
+		// PARTICULIER  A NOTRE ANALYSE. A ENLEVER PLUS TARD.
+		std::map<unsigned int, unsigned int> AdaptInToMod;
+		std::map<unsigned int, unsigned int> AdaptModToOut;
+		if(Qadapt==true) 
 		{
 		    otbAppLogINFO("*** Legend mapping activated ***");
-		    AdaptLegend[3] = 33;
-		    AdaptLegend[10] = 10;
-		    AdaptLegend[12] = 12;
-		    AdaptLegend[14] = 14;
-		    AdaptLegend[41] = 41;
-		    AdaptLegend[438] = 438;
-		    AdaptLegend[791] = 9115;
-		    AdaptLegend[2001] = 2001;
-		    AdaptLegend[3001] = 3001;
-		    AdaptLegend[4001] = 4001;
-		    AdaptLegend[4351] = 435;
-		    AdaptLegend[5002] = 5002;
-		    AdaptLegend[5003] = 5003; 
-		    AdaptLegend[7001] = 7001;
-		    AdaptLegend[8001] = 8001;
-		    AdaptLegend[10012] = 3;
+
+		    AdaptInToMod[33] = 3;
+		    AdaptInToMod[10] = 10;
+		    AdaptInToMod[12] = 12;
+		    AdaptInToMod[14] = 14;
+		    AdaptInToMod[41] = 41;
+		    AdaptInToMod[438] = 438;
+		    AdaptInToMod[9115] = 791;
+		    AdaptInToMod[2001] = 2001;
+		    AdaptInToMod[3001] = 3001;
+		    AdaptInToMod[4001] = 4001;
+		    AdaptInToMod[435] = 4351;
+		    AdaptInToMod[5002] = 5002;
+		    AdaptInToMod[5003] = 5003; 
+		    AdaptInToMod[7001] = 7001;
+		    AdaptInToMod[8001] = 8001;
+		    AdaptInToMod[3] = 10012;
+
+
+		    AdaptModToOut[3] = 33;
+		    AdaptModToOut[10] = 10;
+		    AdaptModToOut[12] = 12;
+		    AdaptModToOut[14] = 14;
+		    AdaptModToOut[41] = 41;
+		    AdaptModToOut[438] = 438;
+		    AdaptModToOut[791] = 9115;
+		    AdaptModToOut[2001] = 2001;
+		    AdaptModToOut[3001] = 3001;
+		    AdaptModToOut[4001] = 4001;
+		    AdaptModToOut[4351] = 435;
+		    AdaptModToOut[5002] = 5002;
+		    AdaptModToOut[5003] = 5003; 
+		    AdaptModToOut[7001] = 7001;
+		    AdaptModToOut[8001] = 8001;
+		    AdaptModToOut[10012] = 3;
 		}
       	        else
 		{
 		    otbAppLogINFO("*** No legend mapping ***");
-		    AdaptLegend[33] = 33;
-		    AdaptLegend[10] = 10;
-		    AdaptLegend[12] = 12;
-		    AdaptLegend[14] = 14;
-		    AdaptLegend[41] = 41;
-		    AdaptLegend[438] = 438;
-		    AdaptLegend[9115] = 9115;
-		    AdaptLegend[2001] = 2001;
-		    AdaptLegend[3001] = 3001;
-		    AdaptLegend[4001] = 4001;
-		    AdaptLegend[435] = 435;
-		    AdaptLegend[5002] = 5002;
-		    AdaptLegend[5003] = 5003; 
-		    AdaptLegend[7001] = 7001;
-		    AdaptLegend[8001] = 8001;
-		    AdaptLegend[3] = 3;
+
+		    AdaptInToMod[33] = 33;
+		    AdaptInToMod[10] = 10;
+		    AdaptInToMod[12] = 12;
+		    AdaptInToMod[14] = 14;
+		    AdaptInToMod[41] = 41;
+		    AdaptInToMod[438] = 438;
+		    AdaptInToMod[9115] = 9115;
+		    AdaptInToMod[2001] = 2001;
+		    AdaptInToMod[3001] = 3001;
+		    AdaptInToMod[4001] = 4001;
+		    AdaptInToMod[435] = 435;
+		    AdaptInToMod[5002] = 5002;
+		    AdaptInToMod[5003] = 5003; 
+		    AdaptInToMod[7001] = 7001;
+		    AdaptInToMod[8001] = 8001;
+		    AdaptInToMod[3] = 3;
+
+
+		    AdaptModToOut[33] = 33;
+		    AdaptModToOut[10] = 10;
+		    AdaptModToOut[12] = 12;
+		    AdaptModToOut[14] = 14;
+		    AdaptModToOut[41] = 41;
+		    AdaptModToOut[438] = 438;
+		    AdaptModToOut[9115] = 9115;
+		    AdaptModToOut[2001] = 2001;
+		    AdaptModToOut[3001] = 3001;
+		    AdaptModToOut[4001] = 4001;
+		    AdaptModToOut[435] = 435;
+		    AdaptModToOut[5002] = 5002;
+		    AdaptModToOut[5003] = 5003; 
+		    AdaptModToOut[7001] = 7001;
+		    AdaptModToOut[8001] = 8001;
+		    AdaptModToOut[3] = 3;
+
 		} 
 		otbAppLogINFO("*** RF classification Started***");
  
@@ -451,20 +495,20 @@ private:
 
 	          for (unsigned int i = 0; i < listValSamples->Size(); ++i)
 	          {
-                          
+                        
 	          	itk::FixedArray<unsigned int, 1> label
-		        = m_Model->Predict(listValSamples->GetMeasurementVector(i), &confidenceIndex, &probaVector)[0];
-                        // TEMPORARY PATCH: Adapt legend
-                        itk::FixedArray<unsigned int, 1>  adapted_legend_label = label;
-                        //std::cout << label[0]  << ",";   
-
-			//adapted_legend_label[0]= AdaptLegend[label[0]];
-	          	//listLabels->PushBack(adapted_legend_label);	
-	
-			listLabels->PushBack(label);	
+			= m_Model->Predict(listValSamples->GetMeasurementVector(i), &confidenceIndex, &probaVector)[0];
+			
+			// Old Version Without Mapping //
+			//listLabels->PushBack(label);	
+			itk::FixedArray<unsigned int, 1>  adapted_legend_label;
+                 	adapted_legend_label[0]= AdaptModToOut[label[0]];
+	          	listLabels->PushBack(adapted_legend_label);	
                         listConfidences->PushBack(confidenceIndex);
 	          	listProbabilities->PushBack(probaVector);
-	          	// otbAppLogINFO(<< "Predicted Label: " << label);
+			
+                        //itk::FixedArray<unsigned int, 1>  adapted_legend_label = label;
+                     	// otbAppLogINFO(<< "Predicted Label: " << label);
 	          	// otbAppLogINFO(<< "Predicted Conf: "  << confidenceIndex);
 	          	// otbAppLogINFO(<< "Predicted Proba: " << listProbabilities[i]);
 
