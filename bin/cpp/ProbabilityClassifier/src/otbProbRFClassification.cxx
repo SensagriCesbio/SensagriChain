@@ -233,43 +233,12 @@ private:
 		}
       	        else
 		{
+		    for(int cl = 0; cl < 10000; cl++)
+		    {
+   		        AdaptInToMod[cl] = cl;
+		        AdaptModToOut[cl] = cl;
+		    }
 		    otbAppLogINFO("*** No legend mapping ***");
-
-		    AdaptInToMod[33] = 33;
-		    AdaptInToMod[10] = 10;
-		    AdaptInToMod[12] = 12;
-		    AdaptInToMod[14] = 14;
-		    AdaptInToMod[41] = 41;
-		    AdaptInToMod[438] = 438;
-		    AdaptInToMod[9115] = 9115;
-		    AdaptInToMod[2001] = 2001;
-		    AdaptInToMod[3001] = 3001;
-		    AdaptInToMod[4001] = 4001;
-		    AdaptInToMod[435] = 435;
-		    AdaptInToMod[5002] = 5002;
-		    AdaptInToMod[5003] = 5003; 
-		    AdaptInToMod[7001] = 7001;
-		    AdaptInToMod[8001] = 8001;
-		    AdaptInToMod[3] = 3;
-
-
-		    AdaptModToOut[33] = 33;
-		    AdaptModToOut[10] = 10;
-		    AdaptModToOut[12] = 12;
-		    AdaptModToOut[14] = 14;
-		    AdaptModToOut[41] = 41;
-		    AdaptModToOut[438] = 438;
-		    AdaptModToOut[9115] = 9115;
-		    AdaptModToOut[2001] = 2001;
-		    AdaptModToOut[3001] = 3001;
-		    AdaptModToOut[4001] = 4001;
-		    AdaptModToOut[435] = 435;
-		    AdaptModToOut[5002] = 5002;
-		    AdaptModToOut[5003] = 5003; 
-		    AdaptModToOut[7001] = 7001;
-		    AdaptModToOut[8001] = 8001;
-		    AdaptModToOut[3] = 3;
-
 		} 
 		otbAppLogINFO("*** RF classification Started***");
  

@@ -12,7 +12,8 @@ class latexdoc:
     """
     # Constructor #
     def __init__(self,outputfile,verbose=False):
-        directory = os.environ["SENSAGRICHAIN_HOME"] +"/bin/scripts/tolatex/" 
+        os.system("mkdir -p latex.output")
+	directory = os.environ["SENSAGRICHAIN_HOME"] +"/bin/scripts/tolatex/" 
         self.outputfile = outputfile + ".tex"
 	self.verbose = verbose
         with open(directory + "template.tex","r") as f:
@@ -179,11 +180,12 @@ class latexdoc:
 
     # image #
     def image(self,imagefile):
+        self.write("\\begin{center}")
         self.write("\\includegraphics{%s}"%(imagefile))
+        self.write("\\end{center}")
 
-    # close #
+# close #
     def close(self):
-        os.system("mkdir -p latex.output")
         self.f.write(self.template[len(self.template) - 1])
         self.f.close()
         os.system("echo "" >> latex.output/tolatex.log")
@@ -196,11 +198,12 @@ class latexdoc:
         rc = subprocess.call(['which', 'pdflatex'],stdout=FNULL, stderr=subprocess.STDOUT)
         if rc == 0:
 	    if self.verbose:
-		os.system("pdflatex -output-directory=latex.output " + self.outputfile)
+		os.system("pdflatex -output-directory=. " + self.outputfile)
 	    else:
-		os.system("pdflatex -output-directory=latex.output " + self.outputfile + " >> latex.output/tolatex.log")
-	    os.system("mv %s latex.output"%(self.outputfile))
-	    os.system("mv latex.output/%s ."%(self.outputfile[:-4] + ".pdf"))
+		os.system("pdflatex -output-directory=. " + self.outputfile + " >> latex.output/tolatex.log")
+	    #os.system("mv *.log *.aux *.tex latex.output"%(self.outputfile))
+	    os.system("mv *.log *.aux *.tex latex.output")
+	    #os.system("mv latex.output/%s ."%(self.outputfile[:-4] + ".pdf"))
         else:
 	    print("ERROR: It seems that pdflatex is not installed on your system.")
 	    print("       Cannot export pdf files.")

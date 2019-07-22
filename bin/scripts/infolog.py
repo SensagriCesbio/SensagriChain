@@ -13,6 +13,11 @@ class infolog():
     def __init__(self):
       self.level = 'INFO'
       self.listLevels = ["DEBUG","INFO","WARNING","ERROR","FATAL"] 
+      self.Lev = {"DEBUG":"DEBUG",
+		  "INFO":"\033[32mINFO\033[0m",
+		  "WARNING":"\033[33mWARNING\033[0m",
+		  "ERROR":"\033[31mERROR\033[0m",
+		  "FATAL":"\033[31mFATAL\033[0m"}
     
     def set_level(self,level):
       if(level in self.listLevels):
@@ -24,7 +29,7 @@ class infolog():
     def msg(self,message,msglevel="INFO"):
       if(msglevel in self.listLevels):
         t = datetime.datetime.now()
-        text = "[%s][%s] %s"%(t.strftime('%Y-%m-%d %H:%M:%S'),msglevel,message)
+        text = "[%s][%s] %s"%(t.strftime('%Y-%m-%d %H:%M:%S'),self.Lev[msglevel],message)
         msgidx = self.listLevels.index(msglevel)
         idx = self.listLevels.index(self.level)
         if( msgidx >= idx):

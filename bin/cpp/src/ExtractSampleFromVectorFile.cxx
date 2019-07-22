@@ -1,6 +1,7 @@
 /*
  * ExtractSampleFromVectorFile.cxx
  *
+ *  Modifcation on: 4/06/2017 (Ludo)
  *  Created on: 19/1/2015
  *      Author: silvia
  */

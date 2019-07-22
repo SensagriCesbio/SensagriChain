@@ -1,2 +1,3 @@
-To build, type:
-ccmake ..
+#To build, type:
+#ccmake ..
+

@@ -440,7 +440,7 @@ rm -r $indir.out
 chdbClassifMixCla = string.Template("""
 # Classification Mix Final Classification: $step $case $method #
 printlog "Classification Mix final Classification $step $case $method"
-$srun -n $ntasks chdb --in-type dir --in-dir $indir --command-line "otbApplicationLauncherCommandLine RFClassification $$SENSAGRICHAIN_HOME/bin/cpp/ProbabilityClassifier/build -trainprofiles Profiles_pred${appid}_${NbSamples}_${mixid}.txt -valprofiles Profiles_val${case}${method}.txt -bands $NbChannels -dateslist ${dateslist} -model Classifications/Models/Model${case}${method}${mixid} -trainlabels CropTypeLabels_pred${appid}_${NbSamples}_${mixid}.txt -vallabels CropTypeLabels_val${case}.txt -predlabels Classifications/PredictedLabels/PredictedLabels${case}${method}${mixid} -conf Classifications/Confidence/Confidence${case}${method}${mixid} -prob Classifications/Probabilities/Probabilities${case}${method}${mixid} -cmatrix Classifications/ConfusionsMatrices/ConfusionsMatrix${case}${method}${mixid} -vi Classifications/VariablesImportances/VariablesImportances${case}${method}${mixid} -nomen $nomen${case}.csv
+$srun -n $ntasks chdb --in-type dir --in-dir $indir --command-line "otbApplicationLauncherCommandLine RFClassification $$SENSAGRICHAIN_HOME/bin/cpp/ProbabilityClassifier/build -trainprofiles Profiles_pred${appid}_${NbSamples}_${mixid}.txt -valprofiles Profiles_val${case}${method}.txt -bands $NbChannels -dateslist ${dateslist} -model Classifications/Models/Model${case}${method}_${mixid} -trainlabels CropTypeLabels_pred${appid}_${NbSamples}_${mixid}.txt -vallabels CropTypeLabels_val${case}.txt -predlabels Classifications/PredictedLabels/PredictedLabels${case}${method}_${mixid} -conf Classifications/Confidence/Confidence${case}${method}_${mixid} -prob Classifications/Probabilities/Probabilities${case}${method}_${mixid} -cmatrix Classifications/ConfusionsMatrices/ConfusionsMatrix${case}${method}_${mixid} -vi Classifications/VariablesImportances/VariablesImportances${case}${method}_${mixid} -nomen $nomen${case}.csv
 "
 rm -r $indir.out
 """)
@@ -535,7 +535,7 @@ $$SENSAGRICHAIN_HOME/bin/cpp/Executables/FusionMap $path/tmp/${tile}_${step1}${c
 RegularizeMap = string.Template("""
 # Map Regularization ${case} ${method} ${tile} #
 printlog "Map Regularizationi ${case} ${step} ${tile}"
-otbcli_ClassificationMapRegularization -io.in $path/tmp/${tile}_${step}${case}${method}_map_${date}.tif -io.out $path/tmp/${tile}_${step}${case}${method}_map_${date}_REG.tif uint16 -ip.radius $radius
+otbcli_ClassificationMapRegularization -io.in $path/tmp/${tile}${step}${case}${method}_map_${date}.tif -io.out $path/tmp/${tile}${step}${case}${method}_map_${date}_REG.tif uint16 -ip.radius $radius
 """)
 
 CreateProducts = string.Template("""
@@ -656,10 +656,16 @@ if __name__ == "__main__":
 	print "It seems that the job order file does not exist or that its structure is incorrect. Please check the job order file."
 	quit()
     # Primitives mappings #
-    stepname = {"OPT":"S2 Optical Band Only",
-	        "OSO":"S2 + OSO Primitives",
-		 "RE":"S2 + Red Edge Primitives",
-  	      "OSORE":"S2 + OSO + Red Edge Primitives"}
+
+    #stepname = {"OPT":"S2 Optical Band Only",
+	#        "OSO":"S2 + OSO Primitives",
+	#	 "RE":"S2 + Red Edge Primitives",
+  	 #     "OSORE":"S2 + OSO + Red Edge Primitives"}
+
+    stepname = {"OPT":"Optical",
+	        "OSO":"Optical",
+		 "RE":"Optical",
+  	      "OSORE":"Optical"}
 
     methodname = {"OPT":"",
 	          "OSO":"_OSO",
@@ -697,6 +703,13 @@ if __name__ == "__main__":
     except:
 	    sysoptions =  "### No options added ###"
      
+    try:
+	    OptCla["modelid"]   = "_" + json.loads(config.get("Mix","ModelId"))
+	    Qmix = True
+    except:
+	    Qmix = False
+
+
 
     # Size Errors Manager
     if(len(TilesList) != len(RadarImg) or len(TilesList) != len(OpticalImg) or len(TilesList) != len(Shapefiles)):
@@ -1028,7 +1041,7 @@ if __name__ == "__main__":
     
     prim = QOption["Optical"]["Primitives"]
     primCode = prim2code[prim]
-    if(prim != "OPT"):
+    if(prim != "OPT" and QOption["Optical"]["Extraction"]):
         IndLearn = {
         'srun':sruncom,  
         'ntasks':NbRun+1,
@@ -1085,7 +1098,7 @@ if __name__ == "__main__":
     'ntasks':NbRun+1,
     'NbSamples':NbSamples,
     'indir':"AllTiles/Optical",
-    'step':stepname[prim],
+    'step':"Optical",
     'case':"",
     'method':methodname[prim],
     'dateslist':loopOpt,
@@ -1112,7 +1125,7 @@ if __name__ == "__main__":
     'ntasks':(NbRun/2)+1,
     'NbSamples':NbSamples,
     'path': workdir,
-    'step':stepname[prim],
+    'step':"Optical",
     'NbRad':NbRadFeatures,
     'NbOpt':NbOptFeatures,
     'case':"",
@@ -1182,9 +1195,9 @@ if __name__ == "__main__":
         OptMap[tile] = {
         'srun':sruncom,  
         'ntasks':NbRun+1,
-        'step':stepname[prim],
+        'step':"Optical",
         'case':"",
-        'method':"",
+        'method':methodname[prim],
         'path': workdir,
         'tile':tile,
         'date':NbOptDates,
@@ -1352,7 +1365,7 @@ if __name__ == "__main__":
         scriptfile.write(chdbOverDir.substitute(RadSam))
         scriptfile.write(chdbOverDir.substitute(RadCroSam))
  
-    if(QOption["Optical"]["Primitives"]):
+    if(QOption["Optical"]["Primitives"] and QOption["Optical"]["Extraction"]):
         scriptfile.write(chdbOverDir.substitute(IndLearn))
         scriptfile.write(chdbOverDir.substitute(IndVal))
         scriptfile.write(chdbOverDir.substitute(CroIndLearn))
@@ -1386,8 +1399,9 @@ if __name__ == "__main__":
     if(QOption["RadarOptical"]["CropClassification"]): scriptfile.write(chdbLoopClassifMulti.substitute(CropClaRadOpt))
 
     # Classification mix. #
-    #TODO: HARD CODDED VERSION SO FAR #
-    if(True):
+    # Activated only if specified
+    # Still in development
+    if(Qmix):
 	try:
 	    # Validation with other model
 	    OptCla["modelid"]   = "_" + json.loads(config.get("Mix","ModelId"))
@@ -1411,7 +1425,7 @@ if __name__ == "__main__":
             'ntasks':NbRun+1,
             'indir': workdir+"/AllTiles/Optical",
             'step':"Creation Symbolic links",
-            'prog':"ln -s ",
+            'prog':"ln -sf ",
             'arg':"",
 	    'report':"Reports/CreateLinksReport.txt"
              }
@@ -1431,7 +1445,7 @@ if __name__ == "__main__":
 
             # Construct coherent training set #
             OptCla['dateslist'] = loopOpt
-            OptCla['mixid'] = "_clamix"
+            OptCla['mixid'] = "clamix"
 	    OptCla['previous'] = usemodelpath[:usemodelpath.find("%path%")+6]
 
             scriptfile.write(chdbClassifMixTrain.substitute(OptCla))

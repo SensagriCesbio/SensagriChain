@@ -30,7 +30,7 @@ def Export(fileconf):
     try:
         title = config.get("Global","Title") 
         NbRun = int(config.get("Global","NbRun"))
-        outputdir = config.get("Global","OutptDirectory")
+        outputdir = config.get("Global","OutputDirectory")
     
         fname = config.get("Global","Name")
       
