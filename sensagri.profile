@@ -6,8 +6,8 @@
 
 echo "*** Sensagri Chain Environment Variables Loaded ***"
 
-export SENSAGRICHAIN_HOME=/datalocal1/home/arnaudl/SensagriChain
 export PATH=/datalocal1/home/arnaudl/local/bin:$PATH
+export SENSAGRICHAIN_HOME=/datalocal1/home/arnaudl/SensagriChain
 export LD_LIBRARY_PATH=/datalocal1/home/arnaudl/local/lib:$LD_LIBRARY_PATH
 
 export SSOTB_HOME=${SENSAGRICHAIN_HOME}/bin/OTB-6.2.0-Linux64

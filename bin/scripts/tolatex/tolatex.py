@@ -202,6 +202,7 @@ class latexdoc:
 	    else:
 		os.system("pdflatex -output-directory=. " + self.outputfile + " >> latex.output/tolatex.log")
 	    #os.system("mv *.log *.aux *.tex latex.output"%(self.outputfile))
+	    os.system("sleep 1")
 	    os.system("mv *.log *.aux *.tex latex.output")
 	    #os.system("mv latex.output/%s ."%(self.outputfile[:-4] + ".pdf"))
         else:

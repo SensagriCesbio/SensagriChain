@@ -3,7 +3,7 @@
 
 ######################################
 #          CESBIO 2017-2019          #
-#    Last update: Ludo 06/06/2019    #
+#    Last update: Ludo 22/07/2019    #
 #    Creation:    Ludo 18/12/2018    #
 ######################################
 
@@ -30,22 +30,26 @@ def printError():
 def cartouche():
     """ Cartouche """
     text1 = """
-#############################################
-#       SenSAgriChain Classification Chain  #
-#       Last version: 25/02/2019            #
-#             CESBIO 2017-2019              #
+##############################################
+#     SenSAgriChain Classification Chain     #
+#          Last version: 22/07/2019          #
+#              CESBIO 2017-2019              #
+#                                            #
+#           Please report bugs at            #
+#         sensagri.cesbio@gmail.com          #
 """
 
-    text2 = """#                                           #
-#     Script generated automaticaly on      #
-#            %s            #
-#  Experienced user can modify it but only  #   
-#            at her/his own risk.           #
-#############################################
+    text2 = """#                                            #
+#     Script generated automaticaly on       #
+#            %s             #
+#  Experienced user can modify it but only   #   
+#            at her/his own risk.            #
+##############################################
+
 
 """%(strftime("%Y-%m-%d %H:%M:%S", gmtime()))
 
-    line = """#############################################"""
+    line = """##############################################"""
 
     print text1 + line
     return text1 + text2 
@@ -596,17 +600,18 @@ if __name__ == "__main__":
     ### Initialise parser ###
     GeneratedCartouche = "#!/bin/bash\n" + cartouche()
     parser=argparse.ArgumentParser()
-    parser.add_argument("config", nargs='?',default = None, help="Set the file CONFIG as the configuration file")
-    parser.add_argument("-w", "--workdir", help="Create work directory WORKDIR. If specified, config is not compulsory")
-    parser.add_argument("-r", "--results", help="Export statistical results according to configuration file")
-    parser.add_argument("-u", "--update", help="Update job order according to files presents in the directory")
-    parser.add_argument("-x", "--execute", help="Execute job with logfiles management")
+    #parser.add_argument("config", nargs='?',default = None, help="Set the file CONFIG as the configuration file.")
+    parser.add_argument("-w", "--workdir", help="Create work directory WORKDIR.")
+    parser.add_argument("-u", "--update", help="Update job order according to files presents in the directory. The job order configuration file should explicitly indicate the required tiles.")
+    parser.add_argument("-j", "--job", help="Create job script according to job order configuration file JOB.")
+    parser.add_argument("-x", "--execute", help="Execute job script with logfiles management.")
+    parser.add_argument("-r", "--results", help="Export statistical results according to configuration file.")
     args=parser.parse_args()
  
-    if args.workdir==None and args.config==None and args.results==None and args.update==None and args.execute==None:
+    if args.workdir==None and args.update==None and args.job==None and args.execute==None and args.results==None: 
         # Handle help message because mutual exclusive option required it.
-        print "usage: sensagrichain [-h] [-w WORKDIR] [-r] config [-x] [-u] joborder.sh"
-        print "sensagrichain: error: too few arguments"
+	print "usage: sensagrichain [-h] [-w WORKDIR] [-u UPDATE] [-j JOB] [-x EXECUTE] [-r RESULTS]"
+        print "sensagrichain: error: too few arguments."
         quit()
 
     if args.workdir!=None:
@@ -625,8 +630,13 @@ if __name__ == "__main__":
         ExecuteJob(args.execute)
         quit()
 
-    config = ConfigParser.ConfigParser()
-    namecfg = config.read(args.config)
+    try:
+	config = ConfigParser.ConfigParser()
+	namecfg = config.read(args.job)
+    except:
+        printError()
+	print "It seems that the job order file does not exist or that its structure is incorrect. Please check the job order file."
+	quit()
  
     ### Parse paramters for joborder files ###
     
@@ -651,7 +661,7 @@ if __name__ == "__main__":
         code = json.loads(config.get('Parameters',"CODE"))
         crop = json.loads(config.get('Parameters',"CROP"))
     except:
-	raise
+	#raise
         printError()
 	print "It seems that the job order file does not exist or that its structure is incorrect. Please check the job order file."
 	quit()
@@ -921,7 +931,8 @@ if __name__ == "__main__":
     #cmd="mkdir -p $alltiles"
     if(QOption["Optical"]["Extraction"] or QOption["Radar"]["Extraction"]): 
         indirOpt = "%s/Optical"%(TilesList[0])
-        indirRad = "%s/Radar"%(TilesList[1])
+        indirRad = "%s/Radar"%(TilesList[0])
+        #indirRad = "%s/Radar"%(TilesList[1]) Use to be 1. Why. Need to be understood.
         outdirOpt = workdir + "/AllTiles/Optical"
         outdirRad = workdir + "/AllTiles/Radar"
         alltiles="%out-dir%/%name%"
