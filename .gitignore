@@ -28,6 +28,7 @@
 !bin/scripts/GetShpFileInfo.py
 !bin/scripts/PlotConfusionMatrix.py
 !bin/scripts/Results.py
+!bin/scripts/S1-treatments.py
 
 !bin/scripts/config/template-joborder.cfg
 !bin/scripts/config/template-results.cfg
