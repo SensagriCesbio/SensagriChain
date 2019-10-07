@@ -15,6 +15,7 @@ import matplotlib.backends.backend_pdf as mpdf
 import datetime
 import PlotStatisticsNew as psn
 import PlotConfusionMatrix as pcm
+#import PlotVariablesImportance as pvi
 import tolatex.tolatex as latex
 
 def printError():
@@ -47,10 +48,12 @@ def Export(fileconf):
     FscoreBAR     = outputdir + title + "-Bar-Fscore-AllClasses-%s.pdf"%(fname)
     TablePDF      = outputdir + title + "-Table-Fscore-AllClasses-%s"%(fname)
     ConfusionsPDF = outputdir + title + "-Plot-Confusions-AllClasses-%s-%s.pdf"%(fname,"%s")
+    VIPDF = outputdir + title + "-Plot-VariablesImportance-AllClasses-%s-%s.pdf"%(fname,"%s")
 
     PrReCM = mpdf.PdfPages(CropTypePDF)
     pdf = mpdf.PdfPages(FscorePDF)
     bar = mpdf.PdfPages(FscoreBAR)
+    vi = mpdf.PdfPages(VIPDF)
 
     ListBand = []
     ListName = []
