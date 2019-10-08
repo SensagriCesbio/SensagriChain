@@ -2,7 +2,7 @@
 The SenSAgri Classification Chain performs supervised classification based on Sentinel-1 and Sentinel-2 time series
 to output a Crop Mask and a Crop Type products each provided with their respective confidence map.
 
-### Dependencies
+## Dependencies
 The chain needs the following dependancies that are commonly installed on Unix/GNU-Linux systems designs for scientific calculations:
 - gcc 4.8.5
 - cmake 3.9.1
@@ -11,7 +11,7 @@ The chain needs the following dependancies that are commonly installed on Unix/G
 - pdflatex
 Slighlty lower versions of these dependencies might still work but it has not been tested.
 
-### Installing
+## Installing
 Details about installation and usage can be found on the Delivrable D5.4 of the SenSAgri project
 
 ## Versioning
