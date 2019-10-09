@@ -21,5 +21,7 @@ Version 0.1 (2019)
 * **CesBIO** - *Initial work* - [sensagricesbio](https://github.com/sensagricesbio)
 
 ## License
-This is free software under the GNU Affero General Public License v3.0.
-See http://www.gnu.org/licenses/agpl.html for details.
+Need to be decided between:
+- Université Paul Sabatier - Toulouse III
+- CesBIO
+- SenSAgri project officier
