@@ -37,6 +37,11 @@
 
 !bin/scripts/tolatex/__init__.py
 
+#Document
+!documents
+!documents/D5.4_Software_of_the_seasonal_crop_type_mapping_prototype_OBSOLETE.pdf
+
+
 # CHDB
 !chdb.tar.gz
 
