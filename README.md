@@ -28,4 +28,5 @@ This is free software under the GNU Affero General Public License v3.0. The lice
 - Université Paul Sabatier - Toulouse III
 - CesBIO
 - SenSAgri project officier
+
 See http://www.gnu.org/licenses/agpl.html for details.
